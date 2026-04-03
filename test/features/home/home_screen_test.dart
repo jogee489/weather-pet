@@ -41,12 +41,12 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(() => _LoadingWeatherNotifier()),
+            // overrideWithValue sets state synchronously — no async race
+            weatherProvider.overrideWithValue(const AsyncLoading()),
           ],
         ),
       );
 
-      // Don't settle — we want the loading state
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -59,7 +59,9 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(() => _ErrorWeatherNotifier()),
+            weatherProvider.overrideWithValue(
+              AsyncError(Exception('Network error'), StackTrace.empty),
+            ),
           ],
         ),
       );
@@ -77,9 +79,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(
-              () => _DataWeatherNotifier(weather),
-            ),
+            weatherProvider.overrideWithValue(AsyncData(weather)),
           ],
         ),
       );
@@ -96,9 +96,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(
-              () => _DataWeatherNotifier(weather),
-            ),
+            weatherProvider.overrideWithValue(AsyncData(weather)),
           ],
         ),
       );
@@ -116,16 +114,14 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(
-              () => _DataWeatherNotifier(weather),
-            ),
+            weatherProvider.overrideWithValue(AsyncData(weather)),
           ],
         ),
       );
 
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('%'), findsOneWidget);  // humidity
+      expect(find.textContaining('%'), findsOneWidget);    // humidity
       expect(find.textContaining('km/h'), findsOneWidget); // wind
     });
 
@@ -136,9 +132,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(
-              () => _DataWeatherNotifier(weather),
-            ),
+            weatherProvider.overrideWithValue(AsyncData(weather)),
           ],
         ),
       );
@@ -155,9 +149,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWith(
-              () => _DataWeatherNotifier(weather),
-            ),
+            weatherProvider.overrideWithValue(AsyncData(weather)),
           ],
         ),
       );
@@ -167,30 +159,4 @@ void main() {
       expect(find.text('Good evening!'), findsOneWidget);
     });
   });
-}
-
-// ─── Fake Notifiers ──────────────────────────────────────────────────────────
-
-class _LoadingWeatherNotifier extends WeatherNotifier {
-  @override
-  Future<WeatherData> build() async {
-    // Never resolves — stays in loading state
-    await Future.delayed(const Duration(hours: 1));
-    throw UnimplementedError();
-  }
-}
-
-class _ErrorWeatherNotifier extends WeatherNotifier {
-  @override
-  Future<WeatherData> build() async {
-    throw Exception('Network error');
-  }
-}
-
-class _DataWeatherNotifier extends WeatherNotifier {
-  _DataWeatherNotifier(this._data);
-  final WeatherData _data;
-
-  @override
-  Future<WeatherData> build() async => _data;
 }
