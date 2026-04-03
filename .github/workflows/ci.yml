@@ -51,7 +51,7 @@ jobs:
 
       - name: Build web (HTML renderer for Playwright compatibility)
         run: |
-          flutter create --platforms=web .
+          flutter create --platforms=web --project-name weather_pet .
           flutter build web --web-renderer html --base-href /weather-pet/
 
       - name: Deploy to GitHub Pages
@@ -79,7 +79,7 @@ jobs:
 
       - name: Build web
         run: |
-          flutter create --platforms=web .
+          flutter create --platforms=web --project-name weather_pet .
           flutter build web --web-renderer html
 
       - uses: actions/setup-node@v4
