@@ -50,7 +50,9 @@ jobs:
         run: flutter pub get
 
       - name: Build web (HTML renderer for Playwright compatibility)
-        run: flutter build web --web-renderer html --base-href /weather-pet/
+        run: |
+          flutter create --platforms=web .
+          flutter build web --web-renderer html --base-href /weather-pet/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -76,7 +78,9 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        run: flutter build web --web-renderer html
+        run: |
+          flutter create --platforms=web .
+          flutter build web --web-renderer html
 
       - uses: actions/setup-node@v4
         with:
