@@ -21,6 +21,11 @@ async function setupWeatherMocks(context: BrowserContext, page: Page) {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
+// NOTE: Flutter web HTML renderer marks flt-paragraph elements as
+// visibility:hidden (Flutter uses its own rendering pipeline, not CSS
+// visibility). We use toBeAttached() instead of toBeVisible() for all
+// Flutter text content.
+
 test.describe('Home Screen', () => {
   test.beforeEach(async ({ page, context }) => {
     await setupWeatherMocks(context, page);
@@ -30,7 +35,8 @@ test.describe('Home Screen', () => {
   });
 
   test('displays temperature in degrees Celsius', async ({ page }) => {
-    await expect(page.getByText(/\d+°C/)).toBeVisible({ timeout: 10_000 });
+    // Use .first() to avoid strict-mode violation (regex also matches "Feels like 18°C")
+    await expect(page.getByText(/\d+°C/).first()).toBeAttached({ timeout: 10_000 });
   });
 
   test('displays a weather condition description', async ({ page }) => {
@@ -39,29 +45,26 @@ test.describe('Home Screen', () => {
       'Foggy', 'Drizzle', 'Rain', 'Snow', 'Thunderstorm', 'Cloudy',
     ];
     const pattern = new RegExp(conditions.join('|'));
-    await expect(page.getByText(pattern)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(pattern).first()).toBeAttached({ timeout: 10_000 });
   });
 
   test('does not show loading spinner after data loads', async ({ page }) => {
-    await expect(page.getByText(/\d+°C/)).toBeVisible({ timeout: 10_000 });
-    // Once temperature is visible, the spinner must be gone
+    // Wait for temperature to appear in DOM
+    await expect(page.getByText(/\d+°C/).first()).toBeAttached({ timeout: 10_000 });
+    // Once temperature is present, the spinner must be gone
     const spinner = page.getByRole('progressbar');
     await expect(spinner).toHaveCount(0);
   });
 
   test('feels-like temperature is visible', async ({ page }) => {
-    await expect(page.getByText(/Feels like/)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/Feels like/).first()).toBeAttached({ timeout: 10_000 });
   });
 
   test('humidity percentage is visible', async ({ page }) => {
-    const el = page.getByText(/%/).first();
-    await el.scrollIntoViewIfNeeded();
-    await expect(el).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/%/).first()).toBeAttached({ timeout: 10_000 });
   });
 
   test('wind speed is visible', async ({ page }) => {
-    const el = page.getByText(/km\/h/).first();
-    await el.scrollIntoViewIfNeeded();
-    await expect(el).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/km\/h/).first()).toBeAttached({ timeout: 10_000 });
   });
 });

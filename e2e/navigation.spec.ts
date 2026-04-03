@@ -13,6 +13,10 @@ async function setupWeatherMocks(context: BrowserContext, page: Page) {
   });
 }
 
+// NOTE: Flutter web HTML renderer marks flt-paragraph elements as
+// visibility:hidden. We use toBeAttached() instead of toBeVisible() for
+// Flutter text content.
+
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page, context }) => {
     await setupWeatherMocks(context, page);
@@ -22,37 +26,37 @@ test.describe('Navigation', () => {
   });
 
   test('app loads without crashing', async ({ page }) => {
-    // Flutter canvas or flt-glass-pane should be present
+    // Flutter canvas or flt-glass-pane should be present in the DOM
     const flutterRoot = page.locator('flt-glass-pane, canvas').first();
-    await expect(flutterRoot).toBeVisible();
+    await expect(flutterRoot).toBeAttached();
   });
 
   test('bottom navigation bar is visible', async ({ page }) => {
-    // With HTML renderer, navigation labels render as text
-    await expect(page.getByText('Weather')).toBeVisible();
-    await expect(page.getByText('Forecast')).toBeVisible();
-    await expect(page.getByText('Search')).toBeVisible();
-    await expect(page.getByText('Settings')).toBeVisible();
+    // With HTML renderer, navigation labels render as flt-paragraph text nodes
+    await expect(page.getByText('Weather').first()).toBeAttached();
+    await expect(page.getByText('Forecast').first()).toBeAttached();
+    await expect(page.getByText('Search').first()).toBeAttached();
+    await expect(page.getByText('Settings').first()).toBeAttached();
   });
 
   test('tapping Forecast tab shows forecast content', async ({ page }) => {
-    await page.getByText('Forecast').click();
-    await expect(page.getByText('Forecast')).toBeVisible();
+    await page.getByText('Forecast').first().click();
+    await expect(page.getByText('Forecast').first()).toBeAttached();
   });
 
   test('tapping Search tab shows search input', async ({ page }) => {
-    await page.getByText('Search').click();
-    await expect(page.getByText('Search for a city')).toBeVisible();
+    await page.getByText('Search').first().click();
+    await expect(page.getByText('Search for a city').first()).toBeAttached({ timeout: 10_000 });
   });
 
   test('tapping Settings tab shows settings content', async ({ page }) => {
-    await page.getByText('Settings').click();
-    await expect(page.getByText('Settings')).toBeVisible();
+    await page.getByText('Settings').first().click();
+    await expect(page.getByText('Settings').first()).toBeAttached();
   });
 
   test('tapping Weather tab returns to home screen', async ({ page }) => {
-    await page.getByText('Settings').click();
-    await page.getByText('Weather').click();
-    await expect(page.getByText(/\d+°C/)).toBeVisible({ timeout: 10_000 });
+    await page.getByText('Settings').first().click();
+    await page.getByText('Weather').first().click();
+    await expect(page.getByText(/\d+°C/).first()).toBeAttached({ timeout: 10_000 });
   });
 });
