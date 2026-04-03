@@ -1,73 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/models/pet_state.dart';
+import '../../core/models/weather_data.dart';
+import '../../core/models/weather_theme.dart';
+import '../../core/providers/pet_state_provider.dart';
+import '../../core/providers/weather_provider.dart';
 
 /// Primary screen — cat mascot + current weather conditions.
-/// Full implementation in Phase 3 (pet animations) and Phase 4 (UI polish).
-class HomeScreen extends StatelessWidget {
+/// Cat animations (Lottie) and particle effects added in Phase 3.
+/// UI polish and hourly strip added in Phase 4.
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF4A90D9),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              // Top bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'My Location',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const Icon(Icons.search, color: Colors.white),
-                ],
-              ),
-              const Spacer(),
-              // Pet placeholder (replaced with Lottie in Phase 3)
-              Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('🐱', style: TextStyle(fontSize: 100)),
-                ),
-              ),
-              const SizedBox(height: 32),
-              // Temperature placeholder
-              Text(
-                '--°C',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w300,
-                    ),
-              ),
-              Text(
-                'Loading weather…',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white70,
-                    ),
-              ),
-              const Spacer(),
-              // Condition pills placeholder
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _ConditionPill(icon: Icons.water_drop_outlined, label: '--%'),
-                  _ConditionPill(icon: Icons.air, label: '-- km/h'),
-                ],
-              ),
-              const SizedBox(height: 32),
-            ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final petState = ref.watch(petStateProvider);
+    final theme = WeatherTheme.forState(petState);
+    final weatherAsync = ref.watch(weatherProvider);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 600),
+      decoration: BoxDecoration(gradient: theme.gradient),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: weatherAsync.when(
+            loading: () => _LoadingBody(theme: theme),
+            error: (e, _) => _ErrorBody(
+              theme: theme,
+              onRetry: () =>
+                  ref.read(weatherProvider.notifier).refresh(),
+            ),
+            data: (weather) => _WeatherBody(
+              weather: weather,
+              petState: petState,
+              theme: theme,
+              onRefresh: () =>
+                  ref.read(weatherProvider.notifier).refresh(),
+            ),
           ),
         ),
       ),
@@ -75,25 +47,310 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _ConditionPill extends StatelessWidget {
-  const _ConditionPill({required this.icon, required this.label});
+// ─── Loading ────────────────────────────────────────────────────────────────
+
+class _LoadingBody extends StatelessWidget {
+  const _LoadingBody({required this.theme});
+  final WeatherTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('🐱', style: TextStyle(fontSize: 90)),
+          const SizedBox(height: 24),
+          const CircularProgressIndicator(color: Colors.white54, strokeWidth: 2),
+          const SizedBox(height: 16),
+          Text(
+            'Fetching weather…',
+            style: TextStyle(color: theme.textPrimary.withOpacity(0.7)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Error ───────────────────────────────────────────────────────────────────
+
+class _ErrorBody extends StatelessWidget {
+  const _ErrorBody({required this.theme, required this.onRetry});
+  final WeatherTheme theme;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('🐱', style: TextStyle(fontSize: 80)),
+            const SizedBox(height: 16),
+            Text(
+              'Could not fetch weather.',
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Check your connection and try again.',
+              style: TextStyle(color: theme.textPrimary.withOpacity(0.7)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Main content ────────────────────────────────────────────────────────────
+
+class _WeatherBody extends StatelessWidget {
+  const _WeatherBody({
+    required this.weather,
+    required this.petState,
+    required this.theme,
+    required this.onRefresh,
+  });
+
+  final WeatherData weather;
+  final PetState petState;
+  final WeatherTheme theme;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: () async => onRefresh(),
+      child: CustomScrollView(
+        slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  _TopBar(weather: weather, theme: theme),
+                  const Spacer(),
+                  // Pet placeholder — replaced with Lottie in Phase 3
+                  _PetPlaceholder(petState: petState),
+                  const SizedBox(height: 32),
+                  _TemperatureDisplay(weather: weather, theme: theme),
+                  const SizedBox(height: 24),
+                  _ConditionPills(weather: weather, theme: theme),
+                  const Spacer(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.weather, required this.theme});
+  final WeatherData weather;
+  final WeatherTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              weather.cityName,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              weather.isDay ? 'Good day!' : 'Good evening!',
+              style: TextStyle(
+                color: theme.textPrimary.withOpacity(0.7),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        GestureDetector(
+          onTap: () => context.go('/search'),
+          child: Icon(Icons.search, color: theme.textPrimary, size: 26),
+        ),
+      ],
+    );
+  }
+}
+
+class _PetPlaceholder extends StatelessWidget {
+  const _PetPlaceholder({required this.petState});
+  final PetState petState;
+
+  static const _emojis = {
+    PetState.sunny: '😸',
+    PetState.cloudy: '🐱',
+    PetState.rainy: '🙀',
+    PetState.snowy: '😿',
+    PetState.stormy: '🙀',
+    PetState.windy: '😼',
+    PetState.hot: '😹',
+    PetState.cold: '😿',
+    PetState.night: '😴',
+    PetState.foggy: '🐱',
+    PetState.loading: '🐱',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 220,
+      height: 220,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          _emojis[petState] ?? '🐱',
+          style: const TextStyle(fontSize: 100),
+        ),
+      ),
+    );
+  }
+}
+
+class _TemperatureDisplay extends StatelessWidget {
+  const _TemperatureDisplay({required this.weather, required this.theme});
+  final WeatherData weather;
+  final WeatherTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          '${weather.temperatureC.round()}°C',
+          style: TextStyle(
+            color: theme.textPrimary,
+            fontSize: 72,
+            fontWeight: FontWeight.w200,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _wmoDescription(weather.wmoCode),
+          style: TextStyle(
+            color: theme.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Feels like ${weather.apparentTemperatureC.round()}°C',
+          style: TextStyle(
+            color: theme.textPrimary.withOpacity(0.7),
+            fontSize: 15,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _wmoDescription(int code) => switch (code) {
+        0 => 'Clear sky',
+        1 => 'Mainly clear',
+        2 => 'Partly cloudy',
+        3 => 'Overcast',
+        45 || 48 => 'Foggy',
+        51 || 53 || 55 => 'Drizzle',
+        61 || 63 || 65 => 'Rain',
+        66 || 67 => 'Freezing rain',
+        71 || 73 || 75 => 'Snow',
+        77 => 'Snow grains',
+        80 || 81 || 82 => 'Rain showers',
+        85 || 86 => 'Snow showers',
+        95 => 'Thunderstorm',
+        96 || 99 => 'Thunderstorm with hail',
+        _ => 'Cloudy',
+      };
+}
+
+class _ConditionPills extends StatelessWidget {
+  const _ConditionPills({required this.weather, required this.theme});
+  final WeatherData weather;
+  final WeatherTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _Pill(
+          icon: Icons.water_drop_outlined,
+          label: '${weather.humidity}%',
+          theme: theme,
+        ),
+        const SizedBox(width: 12),
+        _Pill(
+          icon: Icons.air,
+          label: '${weather.windSpeedKmh.round()} km/h',
+          theme: theme,
+        ),
+      ],
+    );
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.icon,
+    required this.label,
+    required this.theme,
+  });
 
   final IconData icon;
   final String label;
+  final WeatherTheme theme;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(32),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 18),
+          Icon(icon, color: theme.textPrimary, size: 18),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: Colors.white)),
+          Text(label, style: TextStyle(color: theme.textPrimary)),
         ],
       ),
     );

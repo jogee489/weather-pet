@@ -1,14 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/weather_data.dart';
+import '../services/weather_api.dart';
+import 'location_provider.dart';
 
 /// Fetches and caches weather data for the current location.
-/// Implemented in Phase 2.
+/// Automatically re-fetches when [locationProvider] changes.
 class WeatherNotifier extends AsyncNotifier<WeatherData> {
   @override
   Future<WeatherData> build() async {
-    // TODO Phase 2: call LocationService + WeatherApi
-    throw UnimplementedError('WeatherNotifier — implemented in Phase 2');
+    // Watch location — any change triggers a new weather fetch.
+    final location = await ref.watch(locationProvider.future);
+
+    return const WeatherApi().fetchWeather(
+      lat: location.lat,
+      lon: location.lon,
+    );
   }
 
   Future<void> refresh() async {

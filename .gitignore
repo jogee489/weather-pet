@@ -83,3 +83,10 @@ lib/generated_plugin_registrant.dart
 # Google Services
 google-services.json
 GoogleService-Info.plist
+
+# Node / Playwright
+node_modules/
+package-lock.json
+/playwright-report/
+/test-results/
+/e2e/.auth/
