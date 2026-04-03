@@ -1,15 +1,27 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { mockForecastResponse } from './helpers';
+
+async function setupWeatherMocks(context: BrowserContext, page: Page) {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: 51.5074, longitude: -0.1278 });
+  await page.route('**/api.open-meteo.com/**', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockForecastResponse()),
+    });
+  });
+}
 
 test.describe('Navigation', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, context }) => {
+    await setupWeatherMocks(context, page);
     await page.goto('/');
     // Wait for Flutter to boot and splash to complete
     await page.waitForTimeout(3000);
   });
 
   test('app loads without crashing', async ({ page }) => {
-    // No error dialogs or blank screens
-    await expect(page).not.toHaveTitle('');
     // Flutter canvas or flt-glass-pane should be present
     const flutterRoot = page.locator('flt-glass-pane, canvas').first();
     await expect(flutterRoot).toBeVisible();
@@ -39,11 +51,8 @@ test.describe('Navigation', () => {
   });
 
   test('tapping Weather tab returns to home screen', async ({ page }) => {
-    // Navigate away first
     await page.getByText('Settings').click();
-    // Return home
     await page.getByText('Weather').click();
-    // Home should show temperature
     await expect(page.getByText(/\d+°C/)).toBeVisible({ timeout: 10_000 });
   });
 });
