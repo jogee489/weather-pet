@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -41,8 +43,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            // overrideWithValue sets state synchronously — no async race
-            weatherProvider.overrideWithValue(const AsyncLoading()),
+            weatherProvider.overrideWith(() => _LoadingWeatherNotifier()),
           ],
         ),
       );
@@ -59,9 +60,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWithValue(
-              AsyncError(Exception('Network error'), StackTrace.empty),
-            ),
+            weatherProvider.overrideWith(() => _ErrorWeatherNotifier()),
           ],
         ),
       );
@@ -79,7 +78,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWithValue(AsyncData(weather)),
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
           ],
         ),
       );
@@ -96,7 +95,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWithValue(AsyncData(weather)),
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
           ],
         ),
       );
@@ -114,7 +113,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWithValue(AsyncData(weather)),
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
           ],
         ),
       );
@@ -132,7 +131,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWithValue(AsyncData(weather)),
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
           ],
         ),
       );
@@ -149,7 +148,7 @@ void main() {
         _wrap(
           const HomeScreen(),
           overrides: [
-            weatherProvider.overrideWithValue(AsyncData(weather)),
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
           ],
         ),
       );
@@ -159,4 +158,28 @@ void main() {
       expect(find.text('Good evening!'), findsOneWidget);
     });
   });
+}
+
+// ─── Fake Notifiers ──────────────────────────────────────────────────────────
+
+/// Stays in AsyncLoading forever. Uses Completer so there is no timer
+/// dependency — the future simply never resolves during the test.
+class _LoadingWeatherNotifier extends WeatherNotifier {
+  @override
+  Future<WeatherData> build() => Completer<WeatherData>().future;
+}
+
+/// Immediately throws, producing AsyncError state.
+class _ErrorWeatherNotifier extends WeatherNotifier {
+  @override
+  Future<WeatherData> build() async => throw Exception('Network error');
+}
+
+/// Immediately returns data, producing AsyncData state.
+class _DataWeatherNotifier extends WeatherNotifier {
+  _DataWeatherNotifier(this._data);
+  final WeatherData _data;
+
+  @override
+  Future<WeatherData> build() async => _data;
 }
