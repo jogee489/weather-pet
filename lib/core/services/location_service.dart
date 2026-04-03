@@ -35,10 +35,8 @@ class LocationService {
 
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.low, // city-level is enough for weather
-          timeLimit: Duration(seconds: 10),
-        ),
+        desiredAccuracy: LocationAccuracy.low, // city-level is enough for weather
+        timeLimit: const Duration(seconds: 10),
       );
       final result = (lat: position.latitude, lon: position.longitude);
       await _cache(result);
