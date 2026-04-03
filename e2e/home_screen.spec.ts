@@ -54,10 +54,14 @@ test.describe('Home Screen', () => {
   });
 
   test('humidity percentage is visible', async ({ page }) => {
-    await expect(page.getByText(/%/)).toBeVisible({ timeout: 10_000 });
+    const el = page.getByText(/%/).first();
+    await el.scrollIntoViewIfNeeded();
+    await expect(el).toBeVisible({ timeout: 10_000 });
   });
 
   test('wind speed is visible', async ({ page }) => {
-    await expect(page.getByText(/km\/h/)).toBeVisible({ timeout: 10_000 });
+    const el = page.getByText(/km\/h/).first();
+    await el.scrollIntoViewIfNeeded();
+    await expect(el).toBeVisible({ timeout: 10_000 });
   });
 });
