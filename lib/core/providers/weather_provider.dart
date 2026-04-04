@@ -20,7 +20,15 @@ class WeatherNotifier extends AsyncNotifier<WeatherData> {
 
   Future<void> refresh() async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(build);
+    // Re-fetch location first (handles the case where location also failed).
+    await ref.read(locationProvider.notifier).refresh();
+    state = await AsyncValue.guard(() async {
+      final location = await ref.read(locationProvider.future);
+      return const WeatherApi().fetchWeather(
+        lat: location.lat,
+        lon: location.lon,
+      );
+    });
   }
 }
 
