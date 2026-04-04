@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/models/pet_character.dart';
 import '../../core/models/pet_state.dart';
 import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
 import '../../core/providers/pet_state_provider.dart';
+import '../../core/providers/selected_character_provider.dart';
 import '../../core/providers/weather_provider.dart';
+import '../pet/pet_widget.dart';
 
 /// Primary screen — cat mascot + current weather conditions.
 /// Cat animations (Lottie) and particle effects added in Phase 3.
@@ -17,6 +20,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final petState = ref.watch(petStateProvider);
+    final character = ref.watch(selectedCharacterProvider);
     final theme = WeatherTheme.forState(petState);
     final weatherAsync = ref.watch(weatherProvider);
 
@@ -27,18 +31,18 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: weatherAsync.when(
-            loading: () => _LoadingBody(theme: theme),
+            loading: () => _LoadingBody(theme: theme, character: character),
             error: (e, _) => _ErrorBody(
               theme: theme,
-              onRetry: () =>
-                  ref.read(weatherProvider.notifier).refresh(),
+              character: character,
+              onRetry: () => ref.read(weatherProvider.notifier).refresh(),
             ),
             data: (weather) => _WeatherBody(
               weather: weather,
               petState: petState,
+              character: character,
               theme: theme,
-              onRefresh: () =>
-                  ref.read(weatherProvider.notifier).refresh(),
+              onRefresh: () => ref.read(weatherProvider.notifier).refresh(),
             ),
           ),
         ),
@@ -50,8 +54,9 @@ class HomeScreen extends ConsumerWidget {
 // ─── Loading ────────────────────────────────────────────────────────────────
 
 class _LoadingBody extends StatelessWidget {
-  const _LoadingBody({required this.theme});
+  const _LoadingBody({required this.theme, required this.character});
   final WeatherTheme theme;
+  final PetCharacter character;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +64,11 @@ class _LoadingBody extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🐱', style: TextStyle(fontSize: 90)),
+          PetWidget(
+            character: character,
+            petState: PetState.loading,
+            size: 180,
+          ),
           const SizedBox(height: 24),
           const CircularProgressIndicator(color: Colors.white54, strokeWidth: 2),
           const SizedBox(height: 16),
@@ -76,8 +85,13 @@ class _LoadingBody extends StatelessWidget {
 // ─── Error ───────────────────────────────────────────────────────────────────
 
 class _ErrorBody extends StatelessWidget {
-  const _ErrorBody({required this.theme, required this.onRetry});
+  const _ErrorBody({
+    required this.theme,
+    required this.character,
+    required this.onRetry,
+  });
   final WeatherTheme theme;
+  final PetCharacter character;
   final VoidCallback onRetry;
 
   @override
@@ -88,7 +102,11 @@ class _ErrorBody extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('🐱', style: TextStyle(fontSize: 80)),
+            PetWidget(
+              character: character,
+              petState: PetState.loading,
+              size: 160,
+            ),
             const SizedBox(height: 16),
             Text(
               'Could not fetch weather.',
@@ -124,12 +142,14 @@ class _WeatherBody extends StatelessWidget {
   const _WeatherBody({
     required this.weather,
     required this.petState,
+    required this.character,
     required this.theme,
     required this.onRefresh,
   });
 
   final WeatherData weather;
   final PetState petState;
+  final PetCharacter character;
   final WeatherTheme theme;
   final VoidCallback onRefresh;
 
@@ -148,8 +168,16 @@ class _WeatherBody extends StatelessWidget {
                   const SizedBox(height: 16),
                   _TopBar(weather: weather, theme: theme),
                   const Spacer(),
-                  // Pet placeholder — replaced with Lottie in Phase 3
-                  _PetPlaceholder(petState: petState),
+                  // Animated pet — crossfades when PetState changes
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: PetWidget(
+                      key: ValueKey(petState),
+                      character: character,
+                      petState: petState,
+                      size: 220,
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   _TemperatureDisplay(weather: weather, theme: theme),
                   const SizedBox(height: 24),
@@ -201,43 +229,6 @@ class _TopBar extends StatelessWidget {
           child: Icon(Icons.search, color: theme.textPrimary, size: 26),
         ),
       ],
-    );
-  }
-}
-
-class _PetPlaceholder extends StatelessWidget {
-  const _PetPlaceholder({required this.petState});
-  final PetState petState;
-
-  static const _emojis = {
-    PetState.sunny: '😸',
-    PetState.cloudy: '🐱',
-    PetState.rainy: '🙀',
-    PetState.snowy: '😿',
-    PetState.stormy: '🙀',
-    PetState.windy: '😼',
-    PetState.hot: '😹',
-    PetState.cold: '😿',
-    PetState.night: '😴',
-    PetState.foggy: '🐱',
-    PetState.loading: '🐱',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 220,
-      height: 220,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          _emojis[petState] ?? '🐱',
-          style: const TextStyle(fontSize: 100),
-        ),
-      ),
     );
   }
 }

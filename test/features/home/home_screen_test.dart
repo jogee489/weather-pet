@@ -65,7 +65,10 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      // pump() resolves the async error; pump(100ms) lets Riverpod rebuild.
+      // Do NOT use pumpAndSettle — the repeating AnimationController never settles.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.textContaining('Could not fetch weather'), findsOneWidget);
       expect(find.text('Try Again'), findsOneWidget);
@@ -83,7 +86,8 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.textContaining('23°C'), findsOneWidget);
     });
@@ -100,7 +104,8 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Paris'), findsOneWidget);
     });
@@ -118,7 +123,8 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.textContaining('%'), findsOneWidget);    // humidity
       expect(find.textContaining('km/h'), findsOneWidget); // wind
@@ -136,7 +142,8 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Good day!'), findsOneWidget);
     });
@@ -153,7 +160,8 @@ void main() {
         ),
       );
 
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Good evening!'), findsOneWidget);
     });
