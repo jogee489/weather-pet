@@ -74,7 +74,6 @@ local.properties
 **/macos/Flutter/ephemeral/
 
 # Web
-lib/generated_plugin_registrant.dart
 
 # Keystore files
 *.jks
