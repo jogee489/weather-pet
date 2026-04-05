@@ -88,11 +88,7 @@ class _AnimatedCatState extends State<_AnimatedCat>
   }
 
   void _start() {
-    if (_config.repeat) {
-      _controller.repeat(reverse: _config.reverse);
-    } else {
-      _controller.forward();
-    }
+    _controller.repeat(reverse: true);
   }
 
   @override
@@ -139,21 +135,17 @@ class _AnimatedCatState extends State<_AnimatedCat>
 typedef _MatrixFn = Matrix4 Function(double t);
 
 /// Describes one animation loop: duration, matrix transform at time t ∈ [0,1],
-/// easing curve, and whether to repeat / auto-reverse.
+/// and easing curve. All animations repeat with auto-reverse.
 class _AnimConfig {
   const _AnimConfig({
     required this.duration,
     required this.matrixForT,
     this.curve = Curves.easeInOut,
-    this.repeat = true,
-    this.reverse = true,
   });
 
   final Duration duration;
   final _MatrixFn matrixForT;
   final Curve curve;
-  final bool repeat;
-  final bool reverse;
 
   static _AnimConfig forState(PetState state) => switch (state) {
         // Pulse: loading and hot — scale breathe
