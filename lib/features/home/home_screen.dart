@@ -182,6 +182,9 @@ class _WeatherBody extends StatelessWidget {
                   _TemperatureDisplay(weather: weather, theme: theme),
                   const SizedBox(height: 24),
                   _ConditionPills(weather: weather, theme: theme),
+                  const SizedBox(height: 24),
+                  if (weather.hourly.isNotEmpty)
+                    _HourlyStrip(hourly: weather.hourly, theme: theme),
                   const Spacer(),
                   const SizedBox(height: 16),
                 ],
@@ -346,4 +349,120 @@ class _Pill extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── Hourly strip ────────────────────────────────────────────────────────────
+
+class _HourlyStrip extends StatelessWidget {
+  const _HourlyStrip({required this.hourly, required this.theme});
+  final List<HourlyForecast> hourly;
+  final WeatherTheme theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Next 24 hours',
+            style: TextStyle(
+              color: theme.textPrimary.withOpacity(0.7),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 96,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: hourly.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, i) => _HourlyTile(
+              forecast: hourly[i],
+              theme: theme,
+              isFirst: i == 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HourlyTile extends StatelessWidget {
+  const _HourlyTile({
+    required this.forecast,
+    required this.theme,
+    required this.isFirst,
+  });
+  final HourlyForecast forecast;
+  final WeatherTheme theme;
+  final bool isFirst;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = isFirst ? 'Now' : _formatHour(forecast.time);
+    return Container(
+      width: 60,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: isFirst
+            ? theme.textPrimary.withOpacity(0.25)
+            : theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 11,
+              fontWeight: isFirst ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+          Text(
+            _wmoIcon(forecast.wmoCode),
+            style: const TextStyle(fontSize: 20),
+          ),
+          Text(
+            '${forecast.temperatureC.round()}°',
+            style: TextStyle(
+              color: theme.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatHour(DateTime t) {
+    final h = t.hour;
+    final suffix = h < 12 ? 'am' : 'pm';
+    final display = h % 12 == 0 ? 12 : h % 12;
+    return '$display$suffix';
+  }
+
+  static String _wmoIcon(int code) => switch (code) {
+        0 => '☀️',
+        1 => '🌤️',
+        2 => '⛅',
+        3 => '☁️',
+        45 || 48 => '🌫️',
+        51 || 53 || 55 => '🌦️',
+        61 || 63 || 65 => '🌧️',
+        66 || 67 => '🌨️',
+        71 || 73 || 75 || 77 => '❄️',
+        80 || 81 || 82 => '🌦️',
+        85 || 86 => '🌨️',
+        95 || 96 || 99 => '⛈️',
+        _ => '🌥️',
+      };
 }

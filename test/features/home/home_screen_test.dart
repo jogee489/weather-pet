@@ -13,6 +13,7 @@ WeatherData _fakeWeather({
   String city = 'Test City',
   int wmoCode = 0,
   bool isDay = true,
+  List<HourlyForecast>? hourly,
 }) =>
     WeatherData(
       temperatureC: temp,
@@ -22,7 +23,7 @@ WeatherData _fakeWeather({
       isDay: isDay,
       humidity: 65,
       cityName: city,
-      hourly: [],
+      hourly: hourly ?? [],
       daily: [],
     );
 
@@ -164,6 +165,55 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Good evening!'), findsOneWidget);
+    });
+
+    testWidgets('shows hourly strip label when hourly data present',
+        (tester) async {
+      final now = DateTime.now();
+      final weather = _fakeWeather(
+        hourly: List.generate(
+          6,
+          (i) => HourlyForecast(
+            time: now.add(Duration(hours: i)),
+            temperatureC: 18.0 + i,
+            wmoCode: 0,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          const HomeScreen(),
+          overrides: [
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
+          ],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Next 24 hours'), findsOneWidget);
+      expect(find.text('Now'), findsOneWidget);
+    });
+
+    testWidgets('does not show hourly strip when hourly list is empty',
+        (tester) async {
+      final weather = _fakeWeather(hourly: []);
+
+      await tester.pumpWidget(
+        _wrap(
+          const HomeScreen(),
+          overrides: [
+            weatherProvider.overrideWith(() => _DataWeatherNotifier(weather)),
+          ],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('Next 24 hours'), findsNothing);
     });
   });
 }
