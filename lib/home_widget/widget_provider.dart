@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
@@ -21,7 +22,9 @@ const _kGroupId = 'group.com.example.weather_pet';
 /// ref.watch(widgetSyncProvider);
 /// ```
 final widgetSyncProvider = Provider<void>((ref) {
-  // Initialise once
+  // home_widget is Android/iOS only — skip on web.
+  if (kIsWeb) return;
+
   HomeWidget.setAppGroupId(_kGroupId);
 
   final weatherAsync = ref.watch(weatherProvider);
