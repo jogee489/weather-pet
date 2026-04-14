@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/forecast/forecast_screen.dart';
@@ -6,12 +7,16 @@ import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'home_widget/widget_provider.dart';
 
-class WeatherPetApp extends StatelessWidget {
+class WeatherPetApp extends ConsumerWidget {
   const WeatherPetApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Keep the home screen widget in sync with live weather data.
+    ref.watch(widgetSyncProvider);
+
     return MaterialApp.router(
       title: 'Weather Pet',
       debugShowCheckedModeBanner: false,
