@@ -1,64 +1,51 @@
-# Playwright + Flutter Web — Lessons Learned
+# Playwright + Flutter Web — Errors Encountered & Resolved
 
-Everything required to make Playwright tests work against a Flutter web app,
-learned the hard way on the weather-pet project.
+Real failures hit during the weather-pet project, with the exact error,
+what caused it, and what fixed it.
 
 ---
 
-## 1. Use the HTML renderer, not CanvasKit
+## Error 1: `toBeVisible()` always fails on Flutter text
 
-Always build with `--web-renderer html`:
-
-```bash
-flutter build web --web-renderer html
+**Symptom**
+```
+Error: Locator expected to be visible
+  Received: <flt-paragraph style="visibility: hidden; ...">18°C</flt-paragraph>
 ```
 
-CanvasKit renders everything into a single WebGL canvas. Playwright can't inspect
-any text or elements inside it. The HTML renderer outputs real DOM nodes that
-Playwright can query.
+**Cause**
+Flutter's HTML renderer marks every `flt-paragraph` as `visibility: hidden` in
+CSS. Flutter drives visibility through its own rendering pipeline, not CSS.
+Playwright's `toBeVisible()` checks CSS visibility and always fails.
 
-In CI, pass the flag to every `flutter build web` invocation.
-
----
-
-## 2. Use `toBeAttached()` not `toBeVisible()`
-
-Flutter's HTML renderer marks `flt-paragraph` elements as `visibility: hidden`
-in CSS — Flutter manages its own rendering pipeline, not CSS visibility.
-
-```ts
-// WRONG — always fails for Flutter text
-await expect(page.getByText('22°C')).toBeVisible();
-
-// CORRECT
-await expect(page.getByText('22°C')).toBeAttached({ timeout: 10_000 });
-```
-
----
-
-## 3. Hash-based routing — always use `/#/route`
-
-Flutter web uses hash routing by default (`/#/home`, `/#/settings`).
-Navigating to `/settings` (no hash) hits the static file server, returns a 404,
-and Flutter never boots.
-
+**Fix**
 ```ts
 // WRONG
-await page.goto('/settings');
+await expect(page.getByText(/\d+°C/)).toBeVisible();
 
 // CORRECT
-await page.goto('/#/settings');
+await expect(page.getByText(/\d+°C/).first()).toBeAttached({ timeout: 10_000 });
 ```
 
 ---
 
-## 4. Don't click Flutter nav elements — use URL navigation
+## Error 2: `click()` times out — Flutter swallows all pointer events
 
-`flutter-view` intercepts ALL pointer events on the page. Playwright click
-actions time out waiting for a Flutter element to receive them.
+**Symptom**
+```
+Error: locator.click: Timeout 30000ms exceeded
+  waiting for element to receive pointer events
+  element intercepts pointer events: <flutter-view id="flt-glass-pane" ...>
+```
 
+**Cause**
+`flutter-view` sits over the entire page and intercepts 100% of pointer events.
+Playwright can never deliver a click to a Flutter widget.
+
+**Fix**
+Don't click — navigate by URL instead.
 ```ts
-// WRONG — times out
+// WRONG
 await page.getByText('Settings').click();
 
 // CORRECT
@@ -67,53 +54,94 @@ await page.goto('/#/settings');
 
 ---
 
-## 5. Add `waitForTimeout` after navigation
+## Error 3: `page.goto('/settings')` returns 404 and Flutter never boots
 
-Flutter needs time to boot, run the splash sequence, and render.
-Without a wait, queries run before any Flutter content exists in the DOM.
+**Symptom**
+Page loads a 404 from the static file server. No Flutter content appears.
+All subsequent selectors time out.
 
+**Cause**
+Flutter web uses hash-based routing by default. `/settings` is a real URL path
+that the file server tries to serve as a file — it doesn't exist, so 404.
+The correct Flutter route is `/#/settings`.
+
+**Fix**
 ```ts
-await page.goto('/');
-await page.waitForTimeout(5000); // splash + weather fetch
-```
+// WRONG — hits static file server, Flutter never loads
+await page.goto('/settings');
 
-For direct hash routes (skipping splash), 4000ms is usually enough:
-
-```ts
-await page.goto('/#/home');
-await page.waitForTimeout(4000);
+// CORRECT
+await page.goto('/#/settings');
 ```
 
 ---
 
-## 6. Use `.first()` to avoid strict-mode violations
+## Error 4: `scrollIntoViewIfNeeded()` fails for off-screen elements
 
-A regex like `/\d+°C/` can match multiple elements on the page
-(e.g. "18°C" in the main display AND "Feels like 18°C" in the subtitle).
-Playwright strict mode throws if a locator matches more than one element.
+**Symptom**
+Tried `await element.scrollIntoViewIfNeeded()` before asserting on elements
+near the bottom of the screen (humidity %, wind speed). Still timed out.
 
+**Cause**
+Flutter renders its own layout — DOM scroll APIs have no effect on what Flutter
+has drawn. `scrollIntoViewIfNeeded` moves the DOM node but Flutter doesn't
+rerender in response.
+
+**Fix**
+Don't scroll. Just assert with `toBeAttached()` — if the element is in the DOM
+it will be found regardless of scroll position.
 ```ts
-// WRONG — throws if regex matches multiple elements
-await expect(page.getByText(/\d+°C/)).toBeAttached();
+// WRONG
+await page.getByText(/%/).scrollIntoViewIfNeeded();
+await expect(page.getByText(/%/)).toBeVisible();
 
 // CORRECT
+await expect(page.getByText(/%/).first()).toBeAttached({ timeout: 10_000 });
+```
+
+---
+
+## Error 5: Strict mode violation — locator matches more than one element
+
+**Symptom**
+```
+Error: strict mode violation: getByText(/\d+°C/) resolved to 2 elements:
+  1) <flt-paragraph>18°C</flt-paragraph>
+  2) <flt-paragraph>Feels like 16°C</flt-paragraph>
+```
+
+**Cause**
+The regex `/\d+°C/` matches both the main temperature and the "Feels like"
+line. Playwright strict mode throws when a locator resolves to multiple elements.
+
+**Fix**
+```ts
+// WRONG
+await expect(page.getByText(/\d+°C/)).toBeAttached();
+
+// CORRECT — take the first match
 await expect(page.getByText(/\d+°C/).first()).toBeAttached();
 ```
 
 ---
 
-## 7. Mock the weather API and geolocation
+## Error 6: All tests fail because geolocation/API is not mocked
 
-Without mocks the app tries real GPS + real HTTP in CI, which fails.
-Set these up in `beforeEach`:
+**Symptom**
+App shows "Could not fetch weather" error state. Temperature never appears.
+Tests that check for `°C` time out.
 
+**Cause**
+In CI there is no GPS hardware and outbound API calls are unreliable.
+Without mocks the app hits real Open-Meteo and the browser geolocation API,
+both of which fail or time out.
+
+**Fix**
+Set up mocks in `beforeEach` for every spec:
 ```ts
 async function setupWeatherMocks(context: BrowserContext, page: Page) {
-  // Fixed GPS location (London)
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 51.5074, longitude: -0.1278 });
-
-  // Intercept Open-Meteo and return deterministic JSON
   await page.route('**/api.open-meteo.com/**', async route => {
     await route.fulfill({
       status: 200,
@@ -124,53 +152,168 @@ async function setupWeatherMocks(context: BrowserContext, page: Page) {
 }
 ```
 
-Keep `mockForecastResponse()` in a shared `e2e/helpers.ts` so every spec uses
-identical data.
+---
+
+## Error 7: GitHub Pages shows the README, not the Flutter app
+
+**Symptom**
+`https://jogee489.github.io/weather-pet/` renders the repo README.
+No Flutter UI appears.
+
+**Cause**
+GitHub Pages was configured to serve from the `main` branch root.
+The `main` branch root has a `README.md` but no `index.html` — Pages serves
+the README. The Flutter build output lives in the `gh-pages` branch
+(written by the `peaceiris/actions-gh-pages` action).
+
+**Fix**
+In the GitHub repo: Settings → Pages → Source → set branch to `gh-pages`.
 
 ---
 
-## 8. Flutter widget tests: never use `pumpAndSettle()`
+## Error 8: `flutter analyze --fatal-infos` fails on unused parameters
 
-Any widget with a repeating `AnimationController` (e.g. a loading spinner or
-pet animation) means `pumpAndSettle()` will time out — it waits for all
-animations to settle, which never happens.
+**Symptom** (CI failure)
+```
+error - Unused element '_AnimConfig.repeat' - lib/features/pet/pet_widget.dart
+error - Unused element '_AnimConfig.reverse' - lib/features/pet/pet_widget.dart
+```
 
+**Cause**
+`--fatal-infos` promotes info-level lint hints to errors. Fields were added to
+`_AnimConfig` for future use but never read.
+
+**Fix**
+Remove unused fields. Move any logic they controlled inline (in this case
+`controller.repeat(reverse: true)` was hardcoded directly in `_start()`).
+
+---
+
+## Error 9: `pumpAndSettle()` times out in Flutter widget tests
+
+**Symptom**
+```
+flutter: Timeout waiting for pumpAndSettle to settle.
+There are 1 pending timers, the first is:
+  Timer (duration: 0:00:00.090000, periodic: true)
+```
+
+**Cause**
+Any widget with a repeating `AnimationController` (loading spinner, pet
+animation) means there are always pending timers. `pumpAndSettle()` waits for
+all timers to complete — they never do.
+
+**Fix**
 ```dart
 // WRONG — times out when AnimationController.repeat() is active
 await tester.pumpAndSettle();
 
-// CORRECT
+// CORRECT — advance one frame, then a short extra pump to let Riverpod rebuild
 await tester.pump();
 await tester.pump(const Duration(milliseconds: 100));
 ```
 
 ---
 
-## 9. Playwright config — key settings for Flutter web
+## Error 10: `ref.watch()` called inside `refresh()` — invalid lifecycle
 
-```ts
-// playwright.config.ts
-export default defineConfig({
-  use: {
-    baseURL: 'http://localhost:8080',
-    // Flutter web needs a real browser, not a headless shell
-    headless: true,
-  },
-  timeout: 30_000,          // Flutter boot is slow
-  expect: { timeout: 10_000 },
+**Symptom** (runtime crash on retry button tap)
+```
+Bad state: ref.watch can only be used within the build method of a widget
+or the body of a provider
+```
+
+**Cause**
+`refresh()` is a method called from a button callback, not from a provider's
+`build()`. `ref.watch()` is only valid during `build()`.
+
+**Fix**
+```dart
+// WRONG
+Future<void> refresh() async {
+  final location = await ref.watch(locationProvider.future); // crashes
+  ...
+}
+
+// CORRECT
+Future<void> refresh() async {
+  await ref.read(locationProvider.notifier).refresh();
+  state = await AsyncValue.guard(() async {
+    final location = await ref.read(locationProvider.future);
+    ...
+  });
+}
+```
+
+---
+
+## Error 11: Retry fetches stale failed location, weather still fails
+
+**Symptom**
+Tapping "Try Again" on the error screen re-shows the error immediately.
+The location never updates even when GPS is now available.
+
+**Cause**
+`refresh()` only re-fetched weather using the cached (failed) location.
+It didn't re-run the location provider, so the GPS error was never retried.
+
+**Fix**
+`refresh()` must refresh location first, then fetch weather:
+```dart
+Future<void> refresh() async {
+  state = const AsyncLoading();
+  await ref.read(locationProvider.notifier).refresh(); // re-run GPS first
+  state = await AsyncValue.guard(() async {
+    final location = await ref.read(locationProvider.future);
+    return const WeatherApi().fetchWeather(lat: location.lat, lon: location.lon);
+  });
+}
+```
+
+---
+
+## Error 12: `flutter build web` fails — `home_widget` not web-compatible
+
+**Symptom** (CI failure)
+```
+Error: Unsupported operation: Platform._operatingSystem
+```
+or MissingPluginException at runtime.
+
+**Cause**
+`home_widget` is Android/iOS only. Calling `HomeWidget.*` methods during a web
+build or web runtime throws because the underlying platform channels don't exist.
+
+**Fix**
+Guard all `HomeWidget` calls with `kIsWeb`:
+```dart
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+final widgetSyncProvider = Provider<void>((ref) {
+  if (kIsWeb) return; // home_widget not supported on web
+  HomeWidget.setAppGroupId(_kGroupId);
+  ...
 });
 ```
 
 ---
 
-## 10. CI: serve the build before running tests
+## Error 13: Merge conflict overwrites fixed E2E test files
 
-```yaml
-- name: Serve web build & run Playwright tests
-  run: |
-    npx serve build/web -p 8080 &
-    sleep 3                      # wait for server to be ready
-    npx playwright test
+**Symptom**
+After merging `main` into the feature branch, Playwright tests start failing
+again with the original `toBeVisible()` errors.
+
+**Cause**
+`main` had an older version of `e2e/home_screen.spec.ts` and
+`e2e/navigation.spec.ts`. The merge conflict resolution accidentally kept
+`main`'s broken versions.
+
+**Fix**
+When the same E2E files conflict, keep the feature branch (HEAD) version:
+```bash
+git checkout --ours e2e/home_screen.spec.ts
+git checkout --ours e2e/navigation.spec.ts
+git add e2e/
+git commit
 ```
-
-`npx serve` is synchronous-ish but needs a moment. `sleep 3` is enough.
