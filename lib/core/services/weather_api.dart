@@ -88,22 +88,39 @@ class WeatherApi {
     }).toList();
   }
 
-  /// Best-effort reverse geocode: finds the nearest city name for a lat/lon
-  /// by searching Open-Meteo's geocoding API with a blank query workaround.
-  /// Falls back to coordinate string if lookup fails.
+  /// Reverse geocode via Nominatim (OpenStreetMap). Works on web.
+  /// Falls back to coordinate string if the lookup fails.
   Future<String> _reversGeocode({
     required double lat,
     required double lon,
   }) async {
     try {
-      // Open-Meteo doesn't have a true reverse geocode endpoint.
-      // We use the geocoding API with the coordinates formatted as a name
-      // query — this won't always work, so we fall back gracefully.
-      return '${lat.toStringAsFixed(2)}°, ${lon.toStringAsFixed(2)}°';
+      final uri = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse'
+        '?format=json&lat=$lat&lon=$lon&zoom=10&accept-language=en',
+      );
+      final response = await http.get(uri, headers: {
+        'User-Agent': 'WeatherPetApp/1.0',
+      });
+      if (response.statusCode != 200) {
+        return _coordFallback(lat, lon);
+      }
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final address = json['address'] as Map<String, dynamic>? ?? {};
+      // Pick the most specific populated-place name available.
+      final name = address['city'] as String? ??
+          address['town'] as String? ??
+          address['village'] as String? ??
+          address['county'] as String? ??
+          address['state'] as String?;
+      return name ?? _coordFallback(lat, lon);
     } catch (_) {
-      return 'My Location';
+      return _coordFallback(lat, lon);
     }
   }
+
+  static String _coordFallback(double lat, double lon) =>
+      '${lat.toStringAsFixed(2)}°, ${lon.toStringAsFixed(2)}°';
 }
 
 class GeocodingResult {

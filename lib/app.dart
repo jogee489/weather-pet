@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'features/home/home_screen.dart';
 import 'features/forecast/forecast_screen.dart';
+import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
@@ -28,31 +28,49 @@ class WeatherPetApp extends StatelessWidget {
   }
 }
 
+/// Fade transition used for splash → shell and between all shell tabs.
+Page<void> _fadePage(BuildContext context, GoRouterState state, Widget child) =>
+    CustomTransitionPage(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 350),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: (_, animation, __, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+        child: child,
+      ),
+    );
+
 final _router = GoRouter(
   initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/splash',
-      builder: (context, state) => const SplashScreen(),
+      pageBuilder: (context, state) =>
+          _fadePage(context, state, const SplashScreen()),
     ),
     ShellRoute(
       builder: (context, state, child) => _NavShell(child: child),
       routes: [
         GoRoute(
           path: '/home',
-          builder: (context, state) => const HomeScreen(),
+          pageBuilder: (context, state) =>
+              _fadePage(context, state, const HomeScreen()),
         ),
         GoRoute(
           path: '/forecast',
-          builder: (context, state) => const ForecastScreen(),
+          pageBuilder: (context, state) =>
+              _fadePage(context, state, const ForecastScreen()),
         ),
         GoRoute(
           path: '/search',
-          builder: (context, state) => const SearchScreen(),
+          pageBuilder: (context, state) =>
+              _fadePage(context, state, const SearchScreen()),
         ),
         GoRoute(
           path: '/settings',
-          builder: (context, state) => const SettingsScreen(),
+          pageBuilder: (context, state) =>
+              _fadePage(context, state, const SettingsScreen()),
         ),
       ],
     ),
