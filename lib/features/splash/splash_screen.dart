@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/providers/location_provider.dart';
 import '../../core/providers/selected_character_provider.dart';
+import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -90,6 +91,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _init() async {
     await ref.read(selectedCharacterProvider.notifier).load();
+    await ref.read(temperatureUnitProvider.notifier).load();
     if (!mounted) return;
 
     final locationAsync = ref.read(locationProvider);

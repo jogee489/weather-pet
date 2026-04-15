@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../core/providers/pet_state_provider.dart';
+import '../core/providers/temperature_unit_provider.dart';
 import '../core/providers/weather_provider.dart';
 
 /// Android app widget ID — must match the class name in AndroidManifest.xml.
@@ -29,12 +30,13 @@ final widgetSyncProvider = Provider<void>((ref) {
 
   final weatherAsync = ref.watch(weatherProvider);
   final petState = ref.watch(petStateProvider);
+  final unit = ref.watch(temperatureUnitProvider);
 
   weatherAsync.whenData((weather) async {
     // Write individual keys — home_widget stores them in SharedPreferences
     // (Android) / App Groups UserDefaults (iOS).
     await Future.wait([
-      HomeWidget.saveWidgetData<String>('temperature', '${weather.temperatureC.round()}°C'),
+      HomeWidget.saveWidgetData<String>('temperature', unit.format(weather.temperatureC)),
       HomeWidget.saveWidgetData<String>('city', weather.cityName),
       HomeWidget.saveWidgetData<String>('condition', _wmoDescription(weather.wmoCode)),
       HomeWidget.saveWidgetData<String>('petState', petState.name),

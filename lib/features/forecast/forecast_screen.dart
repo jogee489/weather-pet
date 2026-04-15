@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
 import '../../core/providers/pet_state_provider.dart';
+import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
 
 class ForecastScreen extends ConsumerWidget {
@@ -163,7 +164,7 @@ class _HourlyStrip extends StatelessWidget {
   }
 }
 
-class _HourlyTile extends StatelessWidget {
+class _HourlyTile extends ConsumerWidget {
   const _HourlyTile({
     required this.forecast,
     required this.theme,
@@ -174,7 +175,8 @@ class _HourlyTile extends StatelessWidget {
   final bool isFirst;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(temperatureUnitProvider);
     final label = isFirst ? 'Now' : _formatHour(forecast.time);
     return Container(
       width: 60,
@@ -199,7 +201,7 @@ class _HourlyTile extends StatelessWidget {
           Text(_wmoIcon(forecast.wmoCode),
               style: const TextStyle(fontSize: 20)),
           Text(
-            '${forecast.temperatureC.round()}°',
+            unit.format(forecast.temperatureC),
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 14,
@@ -237,7 +239,7 @@ class _HourlyTile extends StatelessWidget {
 
 // ─── Daily card ───────────────────────────────────────────────────────────────
 
-class _DailyCard extends StatelessWidget {
+class _DailyCard extends ConsumerWidget {
   const _DailyCard({
     required this.forecast,
     required this.theme,
@@ -248,7 +250,8 @@ class _DailyCard extends StatelessWidget {
   final bool isFirst;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(temperatureUnitProvider);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -279,7 +282,7 @@ class _DailyCard extends StatelessWidget {
           const Spacer(),
           // Low temp
           Text(
-            '${forecast.minTempC.round()}°',
+            unit.format(forecast.minTempC),
             style: TextStyle(
               color: theme.textPrimary.withOpacity(0.6),
               fontSize: 15,
@@ -297,7 +300,7 @@ class _DailyCard extends StatelessWidget {
           SizedBox(
             width: 36,
             child: Text(
-              '${forecast.maxTempC.round()}°',
+              unit.format(forecast.maxTempC),
               textAlign: TextAlign.end,
               style: TextStyle(
                 color: theme.textPrimary,

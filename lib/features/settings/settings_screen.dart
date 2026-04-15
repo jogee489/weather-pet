@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/pet_state.dart';
+import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_override_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -11,6 +12,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final override = ref.watch(weatherOverrideProvider);
     final previewActive = override != null;
+    final unit = ref.watch(temperatureUnitProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF4A90D9),
@@ -35,8 +37,10 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     _SettingRow(
                       label: 'Temperature Unit',
-                      value: '°C',
-                      onTap: () {},
+                      value: unit.label,
+                      onTap: () => ref
+                          .read(temperatureUnitProvider.notifier)
+                          .toggle(),
                     ),
                     const Divider(color: Colors.white24, height: 1),
                     _SettingRow(
