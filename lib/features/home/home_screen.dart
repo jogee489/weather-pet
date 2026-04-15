@@ -8,6 +8,7 @@ import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/selected_character_provider.dart';
+import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
 import '../pet/pet_widget.dart';
 
@@ -236,17 +237,18 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _TemperatureDisplay extends StatelessWidget {
+class _TemperatureDisplay extends ConsumerWidget {
   const _TemperatureDisplay({required this.weather, required this.theme});
   final WeatherData weather;
   final WeatherTheme theme;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(temperatureUnitProvider);
     return Column(
       children: [
         Text(
-          '${weather.temperatureC.round()}°C',
+          unit.format(weather.temperatureC),
           style: TextStyle(
             color: theme.textPrimary,
             fontSize: 72,
@@ -265,7 +267,7 @@ class _TemperatureDisplay extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Feels like ${weather.apparentTemperatureC.round()}°C',
+          'Feels like ${unit.format(weather.apparentTemperatureC)}',
           style: TextStyle(
             color: theme.textPrimary.withOpacity(0.7),
             fontSize: 15,
@@ -393,7 +395,7 @@ class _HourlyStrip extends StatelessWidget {
   }
 }
 
-class _HourlyTile extends StatelessWidget {
+class _HourlyTile extends ConsumerWidget {
   const _HourlyTile({
     required this.forecast,
     required this.theme,
@@ -404,7 +406,8 @@ class _HourlyTile extends StatelessWidget {
   final bool isFirst;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unit = ref.watch(temperatureUnitProvider);
     final label = isFirst ? 'Now' : _formatHour(forecast.time);
     return Container(
       width: 60,
@@ -431,7 +434,7 @@ class _HourlyTile extends StatelessWidget {
             style: const TextStyle(fontSize: 20),
           ),
           Text(
-            '${forecast.temperatureC.round()}°',
+            unit.format(forecast.temperatureC),
             style: TextStyle(
               color: theme.textPrimary,
               fontSize: 14,
