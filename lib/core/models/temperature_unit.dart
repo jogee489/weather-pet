@@ -13,7 +13,7 @@ enum TemperatureUnit {
       TemperatureUnit.celsius => celsius,
       TemperatureUnit.fahrenheit => celsius * 9 / 5 + 32,
     };
-    return '${value.round()}${label}';
+    return '${value.round()}$label';
   }
 
   /// Raw converted value (unformatted).
