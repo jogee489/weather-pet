@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../core/providers/pet_state_provider.dart';
+import '../core/providers/selected_character_provider.dart';
 import '../core/providers/temperature_unit_provider.dart';
 import '../core/providers/weather_provider.dart';
 
@@ -31,6 +32,7 @@ final widgetSyncProvider = Provider<void>((ref) {
   final weatherAsync = ref.watch(weatherProvider);
   final petState = ref.watch(petStateProvider);
   final unit = ref.watch(temperatureUnitProvider);
+  final character = ref.watch(selectedCharacterProvider);
 
   weatherAsync.whenData((weather) async {
     // Write individual keys — home_widget stores them in SharedPreferences
@@ -40,7 +42,7 @@ final widgetSyncProvider = Provider<void>((ref) {
       HomeWidget.saveWidgetData<String>('city', weather.cityName),
       HomeWidget.saveWidgetData<String>('condition', _wmoDescription(weather.wmoCode)),
       HomeWidget.saveWidgetData<String>('petState', petState.name),
-      HomeWidget.saveWidgetData<String>('emoji', _petEmoji(petState)),
+      HomeWidget.saveWidgetData<String>('emoji', character.emojiForState(petState)),
     ]);
 
     // Tell the OS to redraw the widget.
@@ -71,14 +73,3 @@ String _wmoDescription(int code) => switch (code) {
       _ => 'Cloudy',
     };
 
-String _petEmoji(dynamic petState) => switch (petState.name) {
-      'sunny' => '😸',
-      'hot' => '😹',
-      'windy' => '😼',
-      'rainy' => '🙀',
-      'stormy' => '🙀',
-      'snowy' => '😿',
-      'cold' => '😿',
-      'night' => '😴',
-      _ => '🐱',
-    };

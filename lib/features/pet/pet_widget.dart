@@ -107,7 +107,7 @@ class _AnimatedCatState extends State<_AnimatedCat>
           alignment: Alignment.center,
           transform: _config.matrixForT(t),
           child: Text(
-            _emojiForState(widget.petState, widget.character.emoji),
+            widget.character.emojiForState(widget.petState),
             style: TextStyle(fontSize: widget.size * 0.46),
             textAlign: TextAlign.center,
           ),
@@ -115,19 +115,6 @@ class _AnimatedCatState extends State<_AnimatedCat>
       },
     );
   }
-
-  static String _emojiForState(PetState state, String fallback) =>
-      switch (state) {
-        PetState.sunny => '😸',
-        PetState.hot => '😹',
-        PetState.windy => '😼',
-        PetState.rainy => '🙀',
-        PetState.stormy => '🙀',
-        PetState.snowy => '😿',
-        PetState.cold => '😿',
-        PetState.night => '😴',
-        _ => fallback, // cloudy, foggy, loading → character default emoji
-      };
 }
 
 // ─── Animation configs ────────────────────────────────────────────────────────

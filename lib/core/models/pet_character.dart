@@ -13,6 +13,7 @@ class PetCharacter {
     required this.id,
     required this.displayName,
     required this.emoji,
+    this.expressiveEmojis = const {},
   });
 
   /// Unique identifier; must match the folder name under `assets/lottie/`.
@@ -21,32 +22,45 @@ class PetCharacter {
   /// Name shown in the character picker UI.
   final String displayName;
 
-  /// Fallback emoji shown before Lottie assets load.
+  /// Default emoji — shown before Lottie assets load and for any state
+  /// not listed in [expressiveEmojis].
   final String emoji;
+
+  /// Per-state emoji overrides for expressive reactions.
+  /// States absent from this map fall back to [emoji].
+  final Map<PetState, String> expressiveEmojis;
+
+  /// Returns the expressive emoji for [state], or [emoji] if no override exists.
+  String emojiForState(PetState state) => expressiveEmojis[state] ?? emoji;
 
   /// Returns the asset path for the Lottie JSON that corresponds to [state].
   /// Example: 'assets/lottie/cat/sunny.json'
   String lottiePath(PetState state) =>
       'assets/lottie/$id/${state.name}.json';
 
-  /// All available characters. To unlock a character, add it here
-  /// and supply its Lottie assets.
-  static const List<PetCharacter> all = [
-    PetCharacter(
-      id: 'cat',
-      displayName: 'Cat',
-      emoji: '🐱',
-    ),
-    // Future characters (assets not yet available — keep commented until ready):
-    // PetCharacter(id: 'dog',    displayName: 'Dog',    emoji: '🐶'),
-    // PetCharacter(id: 'dragon', displayName: 'Dragon', emoji: '🐲'),
-    // PetCharacter(id: 'frog',   displayName: 'Frog',   emoji: '🐸'),
-  ];
-
   /// The default character used on first launch.
-  static const PetCharacter defaultCharacter = PetCharacter(
+  static const defaultCharacter = PetCharacter(
     id: 'cat',
     displayName: 'Cat',
     emoji: '🐱',
+    expressiveEmojis: {
+      PetState.sunny: '😸',
+      PetState.hot: '😹',
+      PetState.windy: '😼',
+      PetState.rainy: '🙀',
+      PetState.stormy: '🙀',
+      PetState.snowy: '😿',
+      PetState.cold: '😿',
+      PetState.night: '😴',
+    },
   );
+
+  /// All available characters. To unlock a character, add it here
+  /// and supply its Lottie assets under `assets/lottie/<id>/`.
+  static const List<PetCharacter> all = [
+    defaultCharacter,
+    PetCharacter(id: 'dog',    displayName: 'Dog',    emoji: '🐶'),
+    PetCharacter(id: 'dragon', displayName: 'Dragon', emoji: '🐲'),
+    PetCharacter(id: 'frog',   displayName: 'Frog',   emoji: '🐸'),
+  ];
 }
