@@ -11,6 +11,7 @@ import '../../core/providers/selected_character_provider.dart';
 import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
 import '../pet/pet_widget.dart';
+import 'weather_background.dart';
 
 /// Primary screen — cat mascot + current weather conditions.
 /// Cat animations (Lottie) and particle effects added in Phase 3.
@@ -28,25 +29,33 @@ class HomeScreen extends ConsumerWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 600),
       decoration: BoxDecoration(gradient: theme.gradient),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: weatherAsync.when(
-            loading: () => _LoadingBody(theme: theme, character: character),
-            error: (e, _) => _ErrorBody(
-              theme: theme,
-              character: character,
-              onRetry: () => ref.read(weatherProvider.notifier).refresh(),
-            ),
-            data: (weather) => _WeatherBody(
-              weather: weather,
-              petState: petState,
-              character: character,
-              theme: theme,
-              onRefresh: () => ref.read(weatherProvider.notifier).refresh(),
+      child: Stack(
+        children: [
+          // Weather particle / effect layer — behind everything
+          Positioned.fill(
+            child: WeatherBackground(petState: petState),
+          ),
+          Scaffold(
+            backgroundColor: Colors.transparent,
+            body: SafeArea(
+              child: weatherAsync.when(
+                loading: () => _LoadingBody(theme: theme, character: character),
+                error: (e, _) => _ErrorBody(
+                  theme: theme,
+                  character: character,
+                  onRetry: () => ref.read(weatherProvider.notifier).refresh(),
+                ),
+                data: (weather) => _WeatherBody(
+                  weather: weather,
+                  petState: petState,
+                  character: character,
+                  theme: theme,
+                  onRefresh: () => ref.read(weatherProvider.notifier).refresh(),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
