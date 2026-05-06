@@ -34,9 +34,9 @@ class PetCharacter {
   String emojiForState(PetState state) => expressiveEmojis[state] ?? emoji;
 
   /// Returns the asset path for the Lottie JSON that corresponds to [state].
-  /// Example: 'assets/lottie/cat/sunny.json'
-  String lottiePath(PetState state) =>
-      'assets/lottie/$id/${state.name}.json';
+  /// Example: 'assets/lottie/cat/default/sunny.json'
+  String lottiePath(PetState state, {String variant = 'default'}) =>
+      'assets/lottie/$id/$variant/${state.name}.json';
 
   /// The default character used on first launch.
   static const defaultCharacter = PetCharacter(

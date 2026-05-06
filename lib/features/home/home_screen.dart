@@ -6,10 +6,12 @@ import '../../core/models/pet_character.dart';
 import '../../core/models/pet_state.dart';
 import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
+import '../../core/providers/pet_provider.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/selected_character_provider.dart';
 import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
+import '../pet/pet_animation_widget.dart';
 import '../pet/pet_widget.dart';
 import 'weather_background.dart';
 
@@ -23,6 +25,8 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final petState = ref.watch(petStateProvider);
     final character = ref.watch(selectedCharacterProvider);
+    final pet = ref.watch(selectedPetProvider);
+    final variant = ref.watch(selectedVariantProvider);
     final theme = WeatherTheme.forState(petState);
     final weatherAsync = ref.watch(weatherProvider);
 
@@ -48,7 +52,8 @@ class HomeScreen extends ConsumerWidget {
                 data: (weather) => _WeatherBody(
                   weather: weather,
                   petState: petState,
-                  character: character,
+                  petId: pet.id,
+                  variant: variant,
                   theme: theme,
                   onRefresh: () => ref.read(weatherProvider.notifier).refresh(),
                 ),
@@ -152,14 +157,16 @@ class _WeatherBody extends StatelessWidget {
   const _WeatherBody({
     required this.weather,
     required this.petState,
-    required this.character,
+    required this.petId,
+    required this.variant,
     required this.theme,
     required this.onRefresh,
   });
 
   final WeatherData weather;
   final PetState petState;
-  final PetCharacter character;
+  final String petId;
+  final String variant;
   final WeatherTheme theme;
   final VoidCallback onRefresh;
 
@@ -178,13 +185,14 @@ class _WeatherBody extends StatelessWidget {
                   const SizedBox(height: 16),
                   _TopBar(weather: weather, theme: theme),
                   const Spacer(),
-                  // Animated pet — crossfades when PetState changes
+                  // Animated pet — crossfades when PetState or variant changes
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
-                    child: PetWidget(
-                      key: ValueKey(petState),
-                      character: character,
-                      petState: petState,
+                    child: PetAnimationWidget(
+                      key: ValueKey('$petId-$petState-$variant'),
+                      petId: petId,
+                      weatherState: petState,
+                      variant: variant,
                       size: 220,
                     ),
                   ),
