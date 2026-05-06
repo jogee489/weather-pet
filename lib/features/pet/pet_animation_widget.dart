@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../core/models/pet_character.dart';
-import '../../core/models/pet_config.dart';
 import '../../core/models/pet_state.dart';
 import 'pet_widget.dart';
 
-/// Variant-aware animated pet. Resolves the Lottie asset via [PetRegistry]
+/// Variant-aware animated pet. Resolves the Lottie asset via [PetCharacter]
 /// and falls back to [PetWidget] (which itself falls back to an animated emoji)
 /// when the file is missing.
 class PetAnimationWidget extends StatelessWidget {
@@ -25,30 +24,23 @@ class PetAnimationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = PetRegistry.findById(petId);
-    final resolvedVariant = config.availableVariants.contains(variant)
+    final character = PetCharacter.findById(petId);
+    final resolvedVariant = character.availableVariants.contains(variant)
         ? variant
-        : config.availableVariants.first;
-    final path = config.lottiePath(weatherState.name, variant: resolvedVariant);
+        : character.availableVariants.first;
 
     return SizedBox(
       width: size,
       height: size,
       child: Lottie.asset(
-        path,
+        character.lottiePath(weatherState, variant: resolvedVariant),
         fit: BoxFit.contain,
         repeat: true,
-        errorBuilder: (_, __, ___) {
-          final character = PetCharacter.all.firstWhere(
-            (c) => c.id == petId,
-            orElse: () => PetCharacter.defaultCharacter,
-          );
-          return PetWidget(
-            character: character,
-            petState: weatherState,
-            size: size,
-          );
-        },
+        errorBuilder: (_, __, ___) => PetWidget(
+          character: character,
+          petState: weatherState,
+          size: size,
+        ),
       ),
     );
   }

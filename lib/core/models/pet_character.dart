@@ -14,6 +14,7 @@ class PetCharacter {
     required this.displayName,
     required this.emoji,
     this.expressiveEmojis = const {},
+    this.availableVariants = const ['default'],
   });
 
   /// Unique identifier; must match the folder name under `assets/lottie/`.
@@ -30,6 +31,9 @@ class PetCharacter {
   /// States absent from this map fall back to [emoji].
   final Map<PetState, String> expressiveEmojis;
 
+  /// Variants with Lottie assets present. First entry is the default.
+  final List<String> availableVariants;
+
   /// Returns the expressive emoji for [state], or [emoji] if no override exists.
   String emojiForState(PetState state) => expressiveEmojis[state] ?? emoji;
 
@@ -37,6 +41,10 @@ class PetCharacter {
   /// Example: 'assets/lottie/cat/default/sunny.json'
   String lottiePath(PetState state, {String variant = 'default'}) =>
       'assets/lottie/$id/$variant/${state.name}.json';
+
+  /// Returns the [PetCharacter] for [id], or [defaultCharacter] if not found.
+  static PetCharacter findById(String id) =>
+      all.firstWhere((c) => c.id == id, orElse: () => defaultCharacter);
 
   /// The default character used on first launch.
   static const defaultCharacter = PetCharacter(
@@ -56,7 +64,7 @@ class PetCharacter {
   );
 
   /// All available characters. To unlock a character, add it here
-  /// and supply its Lottie assets under `assets/lottie/<id>/`.
+  /// and supply its Lottie assets under `assets/lottie/<id>/default/`.
   static const List<PetCharacter> all = [
     defaultCharacter,
     PetCharacter(id: 'dog',    displayName: 'Dog',    emoji: '🐶'),

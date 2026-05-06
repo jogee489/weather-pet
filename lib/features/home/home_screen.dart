@@ -25,7 +25,6 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final petState = ref.watch(petStateProvider);
     final character = ref.watch(selectedCharacterProvider);
-    final pet = ref.watch(selectedPetProvider);
     final variant = ref.watch(selectedVariantProvider);
     final theme = WeatherTheme.forState(petState);
     final weatherAsync = ref.watch(weatherProvider);
@@ -52,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
                 data: (weather) => _WeatherBody(
                   weather: weather,
                   petState: petState,
-                  petId: pet.id,
+                  petId: character.id,
                   variant: variant,
                   theme: theme,
                   onRefresh: () => ref.read(weatherProvider.notifier).refresh(),
