@@ -46,4 +46,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/lottie/cat/
+    - assets/lottie/cat/default/
+    - assets/lottie/dog/default/
+    - assets/lottie/dragon/default/
+    - assets/lottie/frog/default/
