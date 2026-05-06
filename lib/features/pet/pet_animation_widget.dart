@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../core/models/pet_character.dart';
@@ -10,7 +9,7 @@ import 'pet_widget.dart';
 /// Variant-aware animated pet. Resolves the Lottie asset via [PetRegistry]
 /// and falls back to [PetWidget] (which itself falls back to an animated emoji)
 /// when the file is missing.
-class PetAnimationWidget extends ConsumerWidget {
+class PetAnimationWidget extends StatelessWidget {
   const PetAnimationWidget({
     super.key,
     required this.petId,
@@ -25,7 +24,7 @@ class PetAnimationWidget extends ConsumerWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final config = PetRegistry.findById(petId);
     final resolvedVariant = config.availableVariants.contains(variant)
         ? variant

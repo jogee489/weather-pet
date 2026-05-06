@@ -3,7 +3,7 @@ import 'pet_state.dart';
 /// Describes a pet character available in the app.
 ///
 /// Adding a new character requires:
-///   1. Creating `assets/lottie/<id>/` with 11 Lottie JSON files (one per [PetState]).
+///   1. Creating `assets/lottie/<id>/default/` with 11 Lottie JSON files (one per [PetState]).
 ///   2. Declaring a new [PetCharacter] in [PetCharacter.all].
 ///
 /// No other code changes are needed — [PetWidget] resolves the correct asset

@@ -54,12 +54,7 @@ class PetRegistry {
     ),
   ];
 
-  static const PetConfig defaultPet = PetConfig(
-    id: 'cat',
-    displayName: 'Cat',
-    emoji: '🐱',
-    availableVariants: ['default'],
-  );
+  static PetConfig get defaultPet => all.first;
 
   /// Returns the [PetConfig] for [id], or [defaultPet] if not found.
   static PetConfig findById(String id) =>

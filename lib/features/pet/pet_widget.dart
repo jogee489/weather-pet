@@ -12,7 +12,7 @@ import '../../core/models/pet_state.dart';
 /// animated emoji widget if the asset file is not present — this allows the
 /// app to run fully before real Lottie files are produced.
 ///
-/// To add real animations: drop `assets/lottie/<id>/<state>.json` files in
+/// To add real animations: drop `assets/lottie/<id>/default/<state>.json` files in
 /// and they will be picked up automatically.
 class PetWidget extends StatelessWidget {
   const PetWidget({
