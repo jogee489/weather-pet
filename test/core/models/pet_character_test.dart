@@ -72,11 +72,11 @@ void main() {
       });
 
       test('produces correct full path for sunny', () {
-        expect(cat.lottiePath(PetState.sunny), 'assets/lottie/cat/sunny.json');
+        expect(cat.lottiePath(PetState.sunny), 'assets/lottie/cat/default/sunny.json');
       });
 
       test('produces correct full path for stormy', () {
-        expect(cat.lottiePath(PetState.stormy), 'assets/lottie/cat/stormy.json');
+        expect(cat.lottiePath(PetState.stormy), 'assets/lottie/cat/default/stormy.json');
       });
 
       test('every PetState produces a non-empty path', () {
@@ -85,9 +85,16 @@ void main() {
         }
       });
 
+      test('non-default variant is reflected in path', () {
+        expect(
+          cat.lottiePath(PetState.sunny, variant: 'ice'),
+          'assets/lottie/cat/ice/sunny.json',
+        );
+      });
+
       test('dog lottie path uses dog folder', () {
         const dog = PetCharacter(id: 'dog', displayName: 'Dog', emoji: '🐶');
-        expect(dog.lottiePath(PetState.sunny), 'assets/lottie/dog/sunny.json');
+        expect(dog.lottiePath(PetState.sunny), 'assets/lottie/dog/default/sunny.json');
       });
     });
   });
