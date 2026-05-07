@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
+import '../../core/models/wmo_code.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
@@ -17,7 +18,7 @@ class ForecastScreen extends ConsumerWidget {
     final weatherAsync = ref.watch(weatherProvider);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 600),
+      duration: kWeatherTransitionDuration,
       decoration: BoxDecoration(gradient: theme.gradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -198,7 +199,7 @@ class _HourlyTile extends ConsumerWidget {
               fontWeight: isFirst ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
-          Text(_wmoIcon(forecast.wmoCode),
+          Text(WmoCode.icon(forecast.wmoCode),
               style: const TextStyle(fontSize: 20)),
           Text(
             unit.format(forecast.temperatureC),
@@ -220,21 +221,6 @@ class _HourlyTile extends ConsumerWidget {
     return '$display$suffix';
   }
 
-  static String _wmoIcon(int code) => switch (code) {
-        0 => '☀️',
-        1 => '🌤️',
-        2 => '⛅',
-        3 => '☁️',
-        45 || 48 => '🌫️',
-        51 || 53 || 55 => '🌦️',
-        61 || 63 || 65 => '🌧️',
-        66 || 67 => '🌨️',
-        71 || 73 || 75 || 77 => '❄️',
-        80 || 81 || 82 => '🌦️',
-        85 || 86 => '🌨️',
-        95 || 96 || 99 => '⛈️',
-        _ => '🌥️',
-      };
 }
 
 // ─── Daily card ───────────────────────────────────────────────────────────────
@@ -277,7 +263,7 @@ class _DailyCard extends ConsumerWidget {
           ),
           const SizedBox(width: 12),
           // Weather icon
-          Text(_wmoIcon(forecast.wmoCode),
+          Text(WmoCode.icon(forecast.wmoCode),
               style: const TextStyle(fontSize: 22)),
           const Spacer(),
           // Low temp
@@ -319,21 +305,6 @@ class _DailyCard extends ConsumerWidget {
     return days[d.weekday - 1];
   }
 
-  static String _wmoIcon(int code) => switch (code) {
-        0 => '☀️',
-        1 => '🌤️',
-        2 => '⛅',
-        3 => '☁️',
-        45 || 48 => '🌫️',
-        51 || 53 || 55 => '🌦️',
-        61 || 63 || 65 => '🌧️',
-        66 || 67 => '🌨️',
-        71 || 73 || 75 || 77 => '❄️',
-        80 || 81 || 82 => '🌦️',
-        85 || 86 => '🌨️',
-        95 || 96 || 99 => '⛈️',
-        _ => '🌥️',
-      };
 }
 
 // ─── Temp range bar ───────────────────────────────────────────────────────────

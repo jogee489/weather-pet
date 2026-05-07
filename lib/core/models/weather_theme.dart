@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'pet_state.dart';
 
+/// Duration of the background gradient transition between weather themes.
+const kWeatherTransitionDuration = Duration(milliseconds: 600);
+
 /// Color theme derived from the current [PetState].
 /// Drives the animated gradient background and accent colours across all screens.
 class WeatherTheme {

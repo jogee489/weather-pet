@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../core/models/wmo_code.dart';
 import '../core/providers/pet_state_provider.dart';
 import '../core/providers/selected_character_provider.dart';
 import '../core/providers/temperature_unit_provider.dart';
@@ -40,7 +41,7 @@ final widgetSyncProvider = Provider<void>((ref) {
     await Future.wait([
       HomeWidget.saveWidgetData<String>('temperature', unit.format(weather.temperatureC)),
       HomeWidget.saveWidgetData<String>('city', weather.cityName),
-      HomeWidget.saveWidgetData<String>('condition', _wmoDescription(weather.wmoCode)),
+      HomeWidget.saveWidgetData<String>('condition', WmoCode.description(weather.wmoCode)),
       HomeWidget.saveWidgetData<String>('petState', petState.name),
       HomeWidget.saveWidgetData<String>('emoji', character.emojiForState(petState)),
     ]);
@@ -53,23 +54,4 @@ final widgetSyncProvider = Provider<void>((ref) {
   });
 });
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-String _wmoDescription(int code) => switch (code) {
-      0 => 'Clear sky',
-      1 => 'Mainly clear',
-      2 => 'Partly cloudy',
-      3 => 'Overcast',
-      45 || 48 => 'Foggy',
-      51 || 53 || 55 => 'Drizzle',
-      61 || 63 || 65 => 'Rain',
-      66 || 67 => 'Freezing rain',
-      71 || 73 || 75 => 'Snow',
-      77 => 'Snow grains',
-      80 || 81 || 82 => 'Rain showers',
-      85 || 86 => 'Snow showers',
-      95 => 'Thunderstorm',
-      96 || 99 => 'Thunderstorm with hail',
-      _ => 'Cloudy',
-    };
 

@@ -6,6 +6,7 @@ import '../../core/models/pet_character.dart';
 import '../../core/models/pet_state.dart';
 import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
+import '../../core/models/wmo_code.dart';
 import '../../core/providers/pet_provider.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/selected_character_provider.dart';
@@ -30,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
     final weatherAsync = ref.watch(weatherProvider);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 600),
+      duration: kWeatherTransitionDuration,
       decoration: BoxDecoration(gradient: theme.gradient),
       child: Stack(
         children: [
@@ -274,7 +275,7 @@ class _TemperatureDisplay extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          _wmoDescription(weather.wmoCode),
+          WmoCode.description(weather.wmoCode),
           style: TextStyle(
             color: theme.textPrimary,
             fontSize: 20,
@@ -293,23 +294,6 @@ class _TemperatureDisplay extends ConsumerWidget {
     );
   }
 
-  String _wmoDescription(int code) => switch (code) {
-        0 => 'Clear sky',
-        1 => 'Mainly clear',
-        2 => 'Partly cloudy',
-        3 => 'Overcast',
-        45 || 48 => 'Foggy',
-        51 || 53 || 55 => 'Drizzle',
-        61 || 63 || 65 => 'Rain',
-        66 || 67 => 'Freezing rain',
-        71 || 73 || 75 => 'Snow',
-        77 => 'Snow grains',
-        80 || 81 || 82 => 'Rain showers',
-        85 || 86 => 'Snow showers',
-        95 => 'Thunderstorm',
-        96 || 99 => 'Thunderstorm with hail',
-        _ => 'Cloudy',
-      };
 }
 
 class _ConditionPills extends StatelessWidget {
@@ -446,7 +430,7 @@ class _HourlyTile extends ConsumerWidget {
             ),
           ),
           Text(
-            _wmoIcon(forecast.wmoCode),
+            WmoCode.icon(forecast.wmoCode),
             style: const TextStyle(fontSize: 20),
           ),
           Text(
@@ -469,19 +453,4 @@ class _HourlyTile extends ConsumerWidget {
     return '$display$suffix';
   }
 
-  static String _wmoIcon(int code) => switch (code) {
-        0 => '☀️',
-        1 => '🌤️',
-        2 => '⛅',
-        3 => '☁️',
-        45 || 48 => '🌫️',
-        51 || 53 || 55 => '🌦️',
-        61 || 63 || 65 => '🌧️',
-        66 || 67 => '🌨️',
-        71 || 73 || 75 || 77 => '❄️',
-        80 || 81 || 82 => '🌦️',
-        85 || 86 => '🌨️',
-        95 || 96 || 99 => '⛈️',
-        _ => '🌥️',
-      };
 }

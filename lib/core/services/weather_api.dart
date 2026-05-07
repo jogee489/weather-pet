@@ -13,6 +13,11 @@ class WeatherApi {
   static const _geocodingBase =
       'https://geocoding-api.open-meteo.com/v1/search';
 
+  // Extra hour is a buffer for timezone edge cases; WeatherData trims to 24.
+  static const _kApiForecastHours = '25';
+  static const _kForecastDays = '7';
+  static const _kMaxSearchResults = '5';
+
   /// Fetch current conditions + 24-hour hourly + 7-day daily for [lat]/[lon].
   /// Also performs a reverse-geocoding lookup to get the city name.
   Future<WeatherData> fetchWeather({
@@ -31,9 +36,9 @@ class WeatherApi {
         'is_day',
       ].join(','),
       'hourly': 'temperature_2m,weather_code',
-      'forecast_hours': '25', // extra buffer for timezone edge cases
+      'forecast_hours': _kApiForecastHours,
       'daily': 'weather_code,temperature_2m_max,temperature_2m_min',
-      'forecast_days': '7',
+      'forecast_days': _kForecastDays,
       'wind_speed_unit': 'kmh',
       'timezone': 'auto',
     });
@@ -57,7 +62,7 @@ class WeatherApi {
 
     final uri = Uri.parse(_geocodingBase).replace(queryParameters: {
       'name': query.trim(),
-      'count': '5',
+      'count': _kMaxSearchResults,
       'language': 'en',
       'format': 'json',
     });

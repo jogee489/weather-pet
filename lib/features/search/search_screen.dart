@@ -86,7 +86,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final searchState = ref.watch(_searchProvider);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 600),
+      duration: kWeatherTransitionDuration,
       decoration: BoxDecoration(gradient: theme.gradient),
       child: Scaffold(
         backgroundColor: Colors.transparent,

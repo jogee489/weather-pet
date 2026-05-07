@@ -14,6 +14,19 @@ enum PetState {
   foggy,
   loading;
 
+  // ─── Thresholds ────────────────────────────────────────────────────────────
+
+  /// Apparent temperature at or above which the pet enters [hot] state (°C).
+  static const double kHotThresholdC = 35.0;
+
+  /// Apparent temperature below which the pet enters [cold] state (°C).
+  static const double kColdThresholdC = 0.0;
+
+  /// Wind speed above which the pet enters [windy] state (km/h).
+  static const double kWindyThresholdKmh = 40.0;
+
+  // ─── Factory ───────────────────────────────────────────────────────────────
+
   /// Derive a [PetState] from an Open-Meteo WMO weather code,
   /// wind speed (km/h), apparent temperature (°C), and whether it is daytime.
   static PetState fromWeather({
@@ -22,15 +35,10 @@ enum PetState {
     required double apparentTempC,
     required bool isDay,
   }) {
-    // Night overrides everything except extreme temps when is_day == 0
     if (!isDay) return PetState.night;
-
-    // Extreme apparent temperature overrides condition-based states
-    if (apparentTempC >= 35) return PetState.hot;
-    if (apparentTempC < 0) return PetState.cold;
-
-    // Strong wind overrides mild condition codes
-    if (windSpeedKmh > 40) return PetState.windy;
+    if (apparentTempC >= kHotThresholdC) return PetState.hot;
+    if (apparentTempC < kColdThresholdC) return PetState.cold;
+    if (windSpeedKmh > kWindyThresholdKmh) return PetState.windy;
 
     return switch (wmoCode) {
       0 => PetState.sunny,
@@ -45,7 +53,9 @@ enum PetState {
     };
   }
 
-  /// Human-readable label used in the Pet Showcase Screen.
+  // ─── Getters ───────────────────────────────────────────────────────────────
+
+  /// Human-readable label used in the preview and settings screens.
   String get displayName => switch (this) {
         PetState.sunny => 'Sunny',
         PetState.cloudy => 'Cloudy',
@@ -58,5 +68,21 @@ enum PetState {
         PetState.night => 'Night',
         PetState.foggy => 'Foggy',
         PetState.loading => 'Loading',
+      };
+
+  /// Generic condition emoji — not character-specific.
+  /// Use [PetCharacter.emojiForState] for character-expressive reactions.
+  String get conditionEmoji => switch (this) {
+        PetState.sunny => '☀️',
+        PetState.cloudy => '☁️',
+        PetState.rainy => '🌧️',
+        PetState.snowy => '❄️',
+        PetState.stormy => '⛈️',
+        PetState.windy => '💨',
+        PetState.hot => '🔥',
+        PetState.cold => '🥶',
+        PetState.night => '🌙',
+        PetState.foggy => '🌫️',
+        PetState.loading => '⏳',
       };
 }

@@ -1,3 +1,6 @@
+/// Maximum number of hourly forecast entries kept after parsing.
+const int kHourlyForecastLimit = 24;
+
 /// Parsed response from the Open-Meteo /v1/forecast endpoint.
 class WeatherData {
   const WeatherData({
@@ -48,7 +51,7 @@ class WeatherData {
       final time = DateTime.parse(hourlyTimes[i] as String);
       // Only include hours from now forward (up to 24)
       if (time.isAfter(now.subtract(const Duration(hours: 1))) &&
-          hourly.length < 24) {
+          hourly.length < kHourlyForecastLimit) {
         hourly.add(HourlyForecast(
           time: time,
           temperatureC: (hourlyTemps[i] as num).toDouble(),

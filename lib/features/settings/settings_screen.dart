@@ -115,7 +115,7 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 child: Text(
-                                  '${_stateEmoji(state)} ${state.displayName}',
+                                  '${state.conditionEmoji} ${state.displayName}',
                                   style: TextStyle(
                                     color: selected
                                         ? const Color(0xFF4A90D9)
@@ -161,19 +161,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  static String _stateEmoji(PetState state) => switch (state) {
-        PetState.sunny => '☀️',
-        PetState.cloudy => '☁️',
-        PetState.rainy => '🌧️',
-        PetState.snowy => '❄️',
-        PetState.stormy => '⛈️',
-        PetState.windy => '💨',
-        PetState.hot => '🔥',
-        PetState.cold => '🥶',
-        PetState.night => '🌙',
-        PetState.foggy => '🌫️',
-        PetState.loading => '⏳',
-      };
 }
 
 // ─── Character picker bottom sheet ───────────────────────────────────────────
