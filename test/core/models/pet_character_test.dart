@@ -30,6 +30,19 @@ void main() {
       }
     });
 
+    test('findById returns correct character', () {
+      expect(PetCharacter.findById('dog').id, 'dog');
+      expect(PetCharacter.findById('frog').displayName, 'Frog');
+    });
+
+    test('findById returns defaultCharacter for unknown id', () {
+      expect(PetCharacter.findById('unicorn').id, PetCharacter.defaultCharacter.id);
+    });
+
+    test('availableVariants defaults to [default]', () {
+      expect(PetCharacter.defaultCharacter.availableVariants, ['default']);
+    });
+
     group('emojiForState', () {
       test('cat returns expressive emoji for sunny', () {
         expect(
@@ -60,41 +73,34 @@ void main() {
       });
     });
 
-    group('lottiePath', () {
+    group('rivePath', () {
       const cat = PetCharacter.defaultCharacter;
 
-      test('uses the character id as folder name', () {
-        expect(cat.lottiePath(PetState.sunny), contains('cat'));
-      });
-
-      test('uses the state name as file name', () {
-        expect(cat.lottiePath(PetState.sunny), endsWith('sunny.json'));
-      });
-
-      test('produces correct full path for sunny', () {
-        expect(cat.lottiePath(PetState.sunny), 'assets/lottie/cat/default/sunny.json');
-      });
-
-      test('produces correct full path for stormy', () {
-        expect(cat.lottiePath(PetState.stormy), 'assets/lottie/cat/default/stormy.json');
-      });
-
-      test('every PetState produces a non-empty path', () {
-        for (final state in PetState.values) {
-          expect(cat.lottiePath(state), isNotEmpty);
-        }
+      test('default variant produces correct path', () {
+        expect(cat.rivePath(), 'assets/rive/cat/default.riv');
       });
 
       test('non-default variant is reflected in path', () {
-        expect(
-          cat.lottiePath(PetState.sunny, variant: 'ice'),
-          'assets/lottie/cat/ice/sunny.json',
-        );
+        expect(cat.rivePath(variant: 'classic'), 'assets/rive/cat/classic.riv');
       });
 
-      test('dog lottie path uses dog folder', () {
+      test('uses character id as folder', () {
+        expect(cat.rivePath(), contains('cat'));
+      });
+
+      test('path ends with .riv', () {
+        expect(cat.rivePath(), endsWith('.riv'));
+      });
+
+      test('dog produces correct path', () {
         const dog = PetCharacter(id: 'dog', displayName: 'Dog', emoji: '🐶');
-        expect(dog.lottiePath(PetState.sunny), 'assets/lottie/dog/default/sunny.json');
+        expect(dog.rivePath(), 'assets/rive/dog/default.riv');
+      });
+
+      test('all characters produce non-empty paths', () {
+        for (final character in PetCharacter.all) {
+          expect(character.rivePath(), isNotEmpty);
+        }
       });
     });
   });

@@ -18,7 +18,7 @@ dependencies:
   go_router: ^13.2.0
 
   # Pet animations
-  lottie: ^3.1.0
+  rive: ^0.13.5
 
   # Location
   geolocator: ^11.0.0
@@ -46,7 +46,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/lottie/cat/default/
-    - assets/lottie/dog/default/
-    - assets/lottie/dragon/default/
-    - assets/lottie/frog/default/
+    - assets/rive/cat/
+    - assets/rive/dog/
+    - assets/rive/dragon/
+    - assets/rive/frog/
