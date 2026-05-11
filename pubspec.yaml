@@ -46,6 +46,10 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/images/cat/
+    - assets/images/dog/
+    - assets/images/dragon/
+    - assets/images/frog/
     - assets/rive/cat/
     - assets/rive/dog/
     - assets/rive/dragon/

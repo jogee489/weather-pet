@@ -85,6 +85,8 @@ class _AnimatedCatState extends State<_AnimatedCat>
 
   @override
   Widget build(BuildContext context) {
+    final imagePath =
+        'assets/images/${widget.character.id}/${widget.petState.name}.png';
     return AnimatedBuilder(
       animation: _controller,
       builder: (_, __) {
@@ -92,10 +94,16 @@ class _AnimatedCatState extends State<_AnimatedCat>
         return Transform(
           alignment: Alignment.center,
           transform: _config.matrixForT(t),
-          child: Text(
-            widget.character.emojiForState(widget.petState),
-            style: TextStyle(fontSize: widget.size * 0.46),
-            textAlign: TextAlign.center,
+          child: Image.asset(
+            imagePath,
+            width: widget.size,
+            height: widget.size,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Text(
+              widget.character.emojiForState(widget.petState),
+              style: TextStyle(fontSize: widget.size * 0.46),
+              textAlign: TextAlign.center,
+            ),
           ),
         );
       },
