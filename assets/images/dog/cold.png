@@ -1,1 +1,1 @@
-__COLD__
+$(cat /tmp/dog_cold.b64)
