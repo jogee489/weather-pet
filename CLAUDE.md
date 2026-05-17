@@ -1,5 +1,23 @@
 # CLAUDE.md — Development notes for Claude Code
 
+## Communication rules
+
+- Skip fluff and preamble. Be brief.
+- No narration. State what you're doing only when asking permission.
+- Summaries: 1–2 sentences max. User will ask for more.
+- Sentences: 3–6 words. Drop articles (the, a, an).
+
+## Git rules
+
+- Branching: `feature/`, `bug/`, `chore/` + short description (e.g. `bug/fix-cat-images`).
+- Never commit without asking first.
+- Never merge without explicit instruction.
+- Binary assets (PNGs): always commit via git to a branch, then PR → merge. Never push binaries via `mcp__github__push_files` — shell substitution is not expanded in MCP parameters.
+- All commits must use author `JJ Dorko <jdorko90@gmail.com>`:
+  ```
+  git -c user.name="JJ Dorko" -c user.email="jdorko90@gmail.com" commit ...
+  ```
+
 ## Before removing any method, field, or asset
 
 Run `grep -r <name> .` across the whole repo (lib/, test/, docs/) before
@@ -9,18 +27,17 @@ missing reference breaks the build immediately.
 
 ## Pushing to main
 
-All pushes to `main` go via MCP (`mcp__github__push_files` / `mcp__github__delete_file`)
-because direct `git push origin main` is blocked by the session proxy.
-Binary files (PNGs, etc.) must be base64-encoded and provided as the `content`
-field — the GitHub API decodes them server-side. Verify PNG headers with:
+Direct `git push origin main` is blocked. Two safe paths:
 
+**Text/code files** — use `mcp__github__push_files`.
+
+**Binary files (PNGs, etc.)** — commit to a feature/bug/chore branch, push via git, then PR → merge via MCP. Never use `mcp__github__push_files` for binaries; shell substitution (`$(cat ...)`) is not expanded in MCP parameters and the literal string gets stored instead.
+
+Verify PNG integrity before committing:
 ```python
 data = open('file.png', 'rb').read(8)
-assert data == bytes([137,80,78,71,13,10,26,10]), "not a valid PNG binary"
+assert data == bytes([137,80,78,71,13,10,26,10]), "not a valid PNG"
 ```
-
-If the file is ~50 bytes and starts with `iVBOR`, it was accidentally stored
-as a base64 text string — re-extract from the source sprite sheet.
 
 ## CI pipeline (`.github/workflows/ci.yml`)
 
