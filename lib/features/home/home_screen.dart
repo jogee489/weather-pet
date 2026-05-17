@@ -43,10 +43,11 @@ class HomeScreen extends ConsumerWidget {
             backgroundColor: Colors.transparent,
             body: SafeArea(
               child: weatherAsync.when(
-                loading: () => _LoadingBody(theme: theme, character: character),
+                loading: () => _LoadingBody(theme: theme, character: character, petState: petState),
                 error: (e, _) => _ErrorBody(
                   theme: theme,
                   character: character,
+                  petState: petState,
                   onRetry: () => ref.read(weatherProvider.notifier).refresh(),
                 ),
                 data: (weather) => _WeatherBody(
@@ -69,9 +70,10 @@ class HomeScreen extends ConsumerWidget {
 // ─── Loading ────────────────────────────────────────────────────────────────
 
 class _LoadingBody extends StatelessWidget {
-  const _LoadingBody({required this.theme, required this.character});
+  const _LoadingBody({required this.theme, required this.character, required this.petState});
   final WeatherTheme theme;
   final PetCharacter character;
+  final PetState petState;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +83,7 @@ class _LoadingBody extends StatelessWidget {
         children: [
           PetWidget(
             character: character,
-            petState: PetState.loading,
+            petState: petState,
             size: 180,
           ),
           const SizedBox(height: 24),
@@ -103,10 +105,12 @@ class _ErrorBody extends StatelessWidget {
   const _ErrorBody({
     required this.theme,
     required this.character,
+    required this.petState,
     required this.onRetry,
   });
   final WeatherTheme theme;
   final PetCharacter character;
+  final PetState petState;
   final VoidCallback onRetry;
 
   @override
@@ -119,7 +123,7 @@ class _ErrorBody extends StatelessWidget {
           children: [
             PetWidget(
               character: character,
-              petState: PetState.loading,
+              petState: petState,
               size: 160,
             ),
             const SizedBox(height: 16),
