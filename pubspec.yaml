@@ -17,9 +17,6 @@ dependencies:
   # Navigation
   go_router: ^13.2.0
 
-  # Pet animations
-  rive: ^0.13.5
-
   # Location
   geolocator: ^11.0.0
   geocoding: ^3.0.0
@@ -50,7 +47,3 @@ flutter:
     - assets/images/dog/
     - assets/images/dragon/
     - assets/images/frog/
-    - assets/rive/cat/
-    - assets/rive/dog/
-    - assets/rive/dragon/
-    - assets/rive/frog/

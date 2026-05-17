@@ -100,7 +100,7 @@ The same state drives both the background animation and the pet character image/
 
 **Background:** No particle layer — plain gradient background only.
 
-**Pet:** Rhythmic pulse scale in a 900 ms cycle (90%–100%) — a “breathing” anticipation loop. Neutral, waiting expression.
+**Pet:** Rhythmic pulse scale in a 900 ms cycle (90%–100%) — a "breathing" anticipation loop. Neutral, waiting expression.
 
 ---
 
@@ -115,3 +115,11 @@ When multiple conditions are true simultaneously the following precedence applie
 5. WMO-code states: `sunny`, `cloudy`, `foggy`, `rainy`, `snowy`, `stormy`
 
 `loading` is only active while a fetch is in progress and is never derived from weather data.
+
+---
+
+## Animation system
+
+Pet characters currently render as **static PNG images** (`assets/images/<id>/<state>.png`) with a simple Flutter `Transform` animation applied in `PetWidget` (float, sway, shiver, etc.).
+
+**Future: Rive animations.** The intent is to replace PNG images with [Rive](https://rive.app) vector animations once assets are available from the designer. Each character will have one `.riv` file per variant under `assets/rive/<id>/<variant>.riv`. The file must export a state machine named `WeatherMachine` with a `Number` input named `weatherIndex` accepting the integer value of the corresponding `PetState` index (0 = sunny … 10 = loading). When Rive assets are in place, restore the `rive` dependency in `pubspec.yaml` and reintroduce `PetAnimationWidget`'s Rive loading logic.
