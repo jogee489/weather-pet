@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
@@ -36,21 +36,25 @@ final widgetSyncProvider = Provider<void>((ref) {
   final character = ref.watch(selectedCharacterProvider);
 
   weatherAsync.whenData((weather) async {
-    // Write individual keys — home_widget stores them in SharedPreferences
-    // (Android) / App Groups UserDefaults (iOS).
-    await Future.wait([
-      HomeWidget.saveWidgetData<String>('temperature', unit.format(weather.temperatureC)),
-      HomeWidget.saveWidgetData<String>('city', weather.cityName),
-      HomeWidget.saveWidgetData<String>('condition', WmoCode.description(weather.wmoCode)),
-      HomeWidget.saveWidgetData<String>('petState', petState.name),
-      HomeWidget.saveWidgetData<String>('emoji', character.emojiForState(petState)),
-    ]);
+    try {
+      // Write individual keys — home_widget stores them in SharedPreferences
+      // (Android) / App Groups UserDefaults (iOS).
+      await Future.wait([
+        HomeWidget.saveWidgetData<String>('temperature', unit.format(weather.temperatureC)),
+        HomeWidget.saveWidgetData<String>('city', weather.cityName),
+        HomeWidget.saveWidgetData<String>('condition', WmoCode.description(weather.wmoCode)),
+        HomeWidget.saveWidgetData<String>('petState', petState.name),
+        HomeWidget.saveWidgetData<String>('emoji', character.emojiForState(petState)),
+      ]);
 
-    // Tell the OS to redraw the widget.
-    await HomeWidget.updateWidget(
-      androidName: _kAndroidWidgetName,
-      iOSName: _kIosWidgetName,
-    );
+      // Tell the OS to redraw the widget.
+      await HomeWidget.updateWidget(
+        androidName: _kAndroidWidgetName,
+        iOSName: _kIosWidgetName,
+      );
+    } catch (e) {
+      debugPrint('widgetSyncProvider: failed to update home widget: $e');
+    }
   });
 });
 

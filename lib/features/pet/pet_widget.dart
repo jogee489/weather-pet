@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 
 import '../../core/models/pet_character.dart';
@@ -24,7 +25,7 @@ class PetWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _AnimatedCat(
+    return _AnimatedPet(
       petState: petState,
       character: character,
       size: size,
@@ -34,8 +35,8 @@ class PetWidget extends StatelessWidget {
 
 // ─── Animated emoji ───────────────────────────────────────────────────────────
 
-class _AnimatedCat extends StatefulWidget {
-  const _AnimatedCat({
+class _AnimatedPet extends StatefulWidget {
+  const _AnimatedPet({
     required this.petState,
     required this.character,
     required this.size,
@@ -46,10 +47,10 @@ class _AnimatedCat extends StatefulWidget {
   final double size;
 
   @override
-  State<_AnimatedCat> createState() => _AnimatedCatState();
+  State<_AnimatedPet> createState() => _AnimatedPetState();
 }
 
-class _AnimatedCatState extends State<_AnimatedCat>
+class _AnimatedPetState extends State<_AnimatedPet>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late _AnimConfig _config;
@@ -63,7 +64,7 @@ class _AnimatedCatState extends State<_AnimatedCat>
   }
 
   @override
-  void didUpdateWidget(_AnimatedCat old) {
+  void didUpdateWidget(_AnimatedPet old) {
     super.didUpdateWidget(old);
     if (old.petState != widget.petState) {
       _config = _AnimConfig.forState(widget.petState);
@@ -99,11 +100,14 @@ class _AnimatedCatState extends State<_AnimatedCat>
             width: widget.size,
             height: widget.size,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Text(
-              widget.character.emojiForState(widget.petState),
-              style: TextStyle(fontSize: widget.size * 0.46),
-              textAlign: TextAlign.center,
-            ),
+            errorBuilder: (_, __, ___) {
+              debugPrint('Missing pet asset: $imagePath');
+              return Text(
+                widget.character.emojiForState(widget.petState),
+                style: TextStyle(fontSize: widget.size * 0.46),
+                textAlign: TextAlign.center,
+              );
+            },
           ),
         );
       },

@@ -14,6 +14,7 @@ import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
 import '../pet/pet_animation_widget.dart';
 import '../pet/pet_widget.dart';
+import '../shared/hourly_strip.dart';
 import 'weather_background.dart';
 
 /// Primary screen — cat mascot + current weather conditions.
@@ -206,7 +207,24 @@ class _WeatherBody extends StatelessWidget {
                   _ConditionPills(weather: weather, theme: theme),
                   const SizedBox(height: 24),
                   if (weather.hourly.isNotEmpty)
-                    _HourlyStrip(hourly: weather.hourly, theme: theme),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            'Next 24 hours',
+                            style: TextStyle(
+                              color: theme.textPrimary.withOpacity(0.7),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        HourlyStrip(hourly: weather.hourly, theme: theme),
+                      ],
+                    ),
                   const Spacer(),
                   const SizedBox(height: 16),
                 ],
@@ -357,104 +375,3 @@ class _Pill extends StatelessWidget {
   }
 }
 
-// ─── Hourly strip ────────────────────────────────────────────────────────────
-
-class _HourlyStrip extends StatelessWidget {
-  const _HourlyStrip({required this.hourly, required this.theme});
-  final List<HourlyForecast> hourly;
-  final WeatherTheme theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            'Next 24 hours',
-            style: TextStyle(
-              color: theme.textPrimary.withOpacity(0.7),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 96,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: hourly.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, i) => _HourlyTile(
-              forecast: hourly[i],
-              theme: theme,
-              isFirst: i == 0,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _HourlyTile extends ConsumerWidget {
-  const _HourlyTile({
-    required this.forecast,
-    required this.theme,
-    required this.isFirst,
-  });
-  final HourlyForecast forecast;
-  final WeatherTheme theme;
-  final bool isFirst;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unit = ref.watch(temperatureUnitProvider);
-    final label = isFirst ? 'Now' : _formatHour(forecast.time);
-    return Container(
-      width: 60,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: isFirst
-            ? theme.textPrimary.withOpacity(0.25)
-            : theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 11,
-              fontWeight: isFirst ? FontWeight.w700 : FontWeight.w400,
-            ),
-          ),
-          Text(
-            WmoCode.icon(forecast.wmoCode),
-            style: const TextStyle(fontSize: 20),
-          ),
-          Text(
-            unit.format(forecast.temperatureC),
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _formatHour(DateTime t) {
-    final h = t.hour;
-    final suffix = h < 12 ? 'am' : 'pm';
-    final display = h % 12 == 0 ? 12 : h % 12;
-    return '$display$suffix';
-  }
-
-}

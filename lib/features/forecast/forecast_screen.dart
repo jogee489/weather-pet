@@ -7,6 +7,7 @@ import '../../core/models/wmo_code.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/temperature_unit_provider.dart';
 import '../../core/providers/weather_provider.dart';
+import '../shared/hourly_strip.dart';
 
 class ForecastScreen extends ConsumerWidget {
   const ForecastScreen({super.key});
@@ -76,7 +77,7 @@ class _ForecastBody extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
           sliver: SliverToBoxAdapter(
-            child: _HourlyStrip(hourly: weather.hourly, theme: theme),
+            child: HourlyStrip(hourly: weather.hourly, theme: theme),
           ),
         ),
 
@@ -123,104 +124,6 @@ class _SectionLabel extends StatelessWidget {
       ),
     );
   }
-}
-
-// ─── Hourly strip ─────────────────────────────────────────────────────────────
-
-class _HourlyStrip extends StatelessWidget {
-  const _HourlyStrip({required this.hourly, required this.theme});
-  final List<HourlyForecast> hourly;
-  final WeatherTheme theme;
-
-  @override
-  Widget build(BuildContext context) {
-    if (hourly.isEmpty) {
-      return Container(
-        height: 96,
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Text(
-            'No hourly data',
-            style: TextStyle(color: theme.textPrimary.withOpacity(0.5)),
-          ),
-        ),
-      );
-    }
-    return SizedBox(
-      height: 96,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: hourly.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) => _HourlyTile(
-          forecast: hourly[i],
-          theme: theme,
-          isFirst: i == 0,
-        ),
-      ),
-    );
-  }
-}
-
-class _HourlyTile extends ConsumerWidget {
-  const _HourlyTile({
-    required this.forecast,
-    required this.theme,
-    required this.isFirst,
-  });
-  final HourlyForecast forecast;
-  final WeatherTheme theme;
-  final bool isFirst;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unit = ref.watch(temperatureUnitProvider);
-    final label = isFirst ? 'Now' : _formatHour(forecast.time);
-    return Container(
-      width: 60,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(
-        color: isFirst
-            ? theme.textPrimary.withOpacity(0.25)
-            : theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 11,
-              fontWeight: isFirst ? FontWeight.w700 : FontWeight.w400,
-            ),
-          ),
-          Text(WmoCode.icon(forecast.wmoCode),
-              style: const TextStyle(fontSize: 20)),
-          Text(
-            unit.format(forecast.temperatureC),
-            style: TextStyle(
-              color: theme.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _formatHour(DateTime t) {
-    final h = t.hour;
-    final suffix = h < 12 ? 'am' : 'pm';
-    final display = h % 12 == 0 ? 12 : h % 12;
-    return '$display$suffix';
-  }
-
 }
 
 // ─── Daily card ───────────────────────────────────────────────────────────────
@@ -329,7 +232,7 @@ class _TempBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(3),
       ),
       child: FractionallySizedBox(
-        widthFactor: _clamp((maxTemp - minTemp).abs() / 30),
+        widthFactor: _clamp((maxTemp - minTemp).abs() / 40.0), // 40°C = max expected daily delta
         alignment: Alignment.centerLeft,
         child: Container(
           decoration: BoxDecoration(

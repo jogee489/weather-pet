@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 
 import '../models/weather_data.dart';
@@ -43,7 +45,10 @@ class WeatherApi {
       'timezone': 'auto',
     });
 
-    final response = await http.get(uri);
+    final response = await http.get(uri).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw const WeatherApiException('Forecast request timed out'),
+    );
     if (response.statusCode != 200) {
       throw WeatherApiException(
         'Forecast request failed: ${response.statusCode}',
@@ -67,7 +72,10 @@ class WeatherApi {
       'format': 'json',
     });
 
-    final response = await http.get(uri);
+    final response = await http.get(uri).timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw const WeatherApiException('Geocoding request timed out'),
+    );
     if (response.statusCode != 200) {
       throw WeatherApiException(
         'Geocoding request failed: ${response.statusCode}',
@@ -119,7 +127,8 @@ class WeatherApi {
           address['county'] as String? ??
           address['state'] as String?;
       return name ?? _coordFallback(lat, lon);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Reverse geocode failed: $e');
       return _coordFallback(lat, lon);
     }
   }

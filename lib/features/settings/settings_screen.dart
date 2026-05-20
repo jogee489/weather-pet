@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/app_colors.dart';
 import '../../core/models/pet_character.dart';
 import '../../core/models/pet_state.dart';
 import '../../core/providers/selected_character_provider.dart';
@@ -18,7 +19,7 @@ class SettingsScreen extends ConsumerWidget {
     final character = ref.watch(selectedCharacterProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF4A90D9),
+      backgroundColor: kBrandBlue,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -118,7 +119,7 @@ class SettingsScreen extends ConsumerWidget {
                                   '${state.conditionEmoji} ${state.displayName}',
                                   style: TextStyle(
                                     color: selected
-                                        ? const Color(0xFF4A90D9)
+                                        ? kBrandBlue
                                         : Colors.white,
                                     fontWeight: selected
                                         ? FontWeight.w700
@@ -175,7 +176,7 @@ class _CharacterPickerSheet extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF1A4A8A),
+        color: kBrandBlueDark,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
@@ -243,7 +244,7 @@ class _CharacterPickerSheet extends ConsumerWidget {
                         character.displayName,
                         style: TextStyle(
                           color: selected
-                              ? const Color(0xFF1A4A8A)
+                              ? kBrandBlueDark
                               : Colors.white,
                           fontWeight: selected
                               ? FontWeight.w700

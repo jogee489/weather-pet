@@ -6,6 +6,9 @@ import '../../core/models/pet_state.dart';
 
 // ─── Tunable constants ───────────────────────────────────────────────────────
 
+/// Duration of the main particle animation loop (seamless repeat).
+const _kAnimationDuration = Duration(seconds: 8);
+
 /// How often the lightning fires during [PetState.stormy], in seconds.
 /// The flash itself lasts ~250 ms. Tune this until the storm feels right.
 const Duration kLightningPeriod = Duration(seconds: 7);
@@ -40,7 +43,7 @@ class _WeatherBackgroundState extends State<WeatherBackground>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 8),
+      duration: _kAnimationDuration,
     )..repeat();
     _lightningCtrl = AnimationController(
       vsync: this,
@@ -80,7 +83,7 @@ class _WeatherPainter extends CustomPainter {
     required this.state,
     required this.t,
     required this.lightningT,
-  });
+  }) : _particleData = _precomputeParticleData(state);
 
   final PetState state;
 
@@ -89,6 +92,39 @@ class _WeatherPainter extends CustomPainter {
 
   /// Animation progress in [0, 1) over [kLightningPeriod].
   final double lightningT;
+
+  /// Pre-computed per-particle random values, keyed by particle seed index.
+  /// Avoids calling [_rng] inside [paint] on every frame.
+  final Map<int, List<double>> _particleData;
+
+  /// Build the particle data cache for the given [state].
+  static Map<int, List<double>> _precomputeParticleData(PetState state) {
+    final data = <int, List<double>>{};
+    switch (state) {
+      case PetState.rainy:
+        for (var i = 0; i < 80; i++) data[i] = _rng(i, 2);
+      case PetState.stormy:
+        for (var i = 0; i < 110; i++) data[i + 1000] = _rng(i + 1000, 2);
+      case PetState.snowy:
+        for (var i = 0; i < 70; i++) data[i + 100] = _rng(i + 100, 4);
+      case PetState.windy:
+        for (var i = 0; i < 6; i++) data[i + 200] = _rng(i + 200, 4);
+        for (var i = 0; i < 4; i++) data[i + 220] = _rng(i + 220, 5);
+      case PetState.hot:
+        for (var i = 0; i < 14; i++) data[i + 50] = _rng(i + 50, 4);
+      case PetState.cold:
+        for (var i = 0; i < 18; i++) data[i + 300] = _rng(i + 300, 4);
+      case PetState.night:
+        for (var i = 0; i < 90; i++) data[i + 400] = _rng(i + 400, 6);
+      case PetState.foggy:
+        for (var i = 0; i < 14; i++) data[i + 500] = _rng(i + 500, 6);
+      default:
+        break;
+    }
+    return data;
+  }
+
+  List<double> _p(int seed) => _particleData[seed]!;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -203,7 +239,7 @@ class _WeatherPainter extends CustomPainter {
     final len = size.height * 0.055;
 
     for (var i = 0; i < count; i++) {
-      final r = _rng(i, 2);
+      final r = _p(i);
       final x0 = (-0.1 + r[0] * 1.2) * size.width;
       // N=2 → fall twice per 8-s loop (≈ 4 s per pass). ✓
       final y0 = ((t * 2 + r[1]) % 1.0) * (size.height + len) - len;
@@ -230,7 +266,7 @@ class _WeatherPainter extends CustomPainter {
     final len = size.height * 0.075;
 
     for (var i = 0; i < count; i++) {
-      final r = _rng(i + 1000, 2);
+      final r = _p(i + 1000);
       final x0 = (-0.1 + r[0] * 1.2) * size.width;
       // N=4 → fall 4× per 8-s loop (≈ 2 s per pass, fast storm). ✓
       final y0 = ((t * 4 + r[1]) % 1.0) * (size.height + len) - len;
@@ -271,7 +307,7 @@ class _WeatherPainter extends CustomPainter {
 
     const count = 70;
     for (var i = 0; i < count; i++) {
-      final r = _rng(i + 100, 4);
+      final r = _p(i + 100);
       final xBase = r[0] * size.width;
       // N=1 → fall once per 8-s loop (slow, floaty). ✓
       final y = ((t + r[1]) % 1.0) * (size.height * 1.05);
@@ -290,7 +326,7 @@ class _WeatherPainter extends CustomPainter {
 
     const swirlCount = 6;
     for (var i = 0; i < swirlCount; i++) {
-      final r = _rng(i + 200, 4);
+      final r = _p(i + 200);
       final y = (0.1 + r[0] * 0.8) * size.height;
       final phase = r[1];
       final radius = (0.05 + r[2] * 0.04) * size.width;
@@ -313,7 +349,7 @@ class _WeatherPainter extends CustomPainter {
     // at the loop boundary is invisible. ✓
     const leafCount = 4;
     for (var i = 0; i < leafCount; i++) {
-      final r = _rng(i + 220, 5);
+      final r = _p(i + 220);
       final yBase = (0.15 + r[0] * 0.70) * size.height;
       final phase = r[1];
 
@@ -384,7 +420,7 @@ class _WeatherPainter extends CustomPainter {
 
     const lineCount = 14;
     for (var i = 0; i < lineCount; i++) {
-      final r = _rng(i + 50, 4);
+      final r = _p(i + 50);
       final xBase = (0.04 + r[0] * 0.92) * size.width;
       final amplitude = 8.0 + r[2] * 14.0;
 
@@ -457,7 +493,7 @@ class _WeatherPainter extends CustomPainter {
     // Slow-drifting ice motes. N=1 → rise in 8 s. ✓
     const count = 18;
     for (var i = 0; i < count; i++) {
-      final r = _rng(i + 300, 4);
+      final r = _p(i + 300);
       final xBase = r[0] * size.width;
       final y = size.height - ((t + r[1]) % 1.0) * size.height * 1.1;
       // N=1 lateral drift. ✓
@@ -504,7 +540,7 @@ class _WeatherPainter extends CustomPainter {
   void _paintNight(Canvas canvas, Size size) {
     const count = 90;
     for (var i = 0; i < count; i++) {
-      final r = _rng(i + 400, 6);
+      final r = _p(i + 400);
       final x = r[0] * size.width;
       final y = r[1] * size.height;
       final baseRadius = 0.7 + r[2] * 2.5;
@@ -552,7 +588,7 @@ class _WeatherPainter extends CustomPainter {
     // canvas.scale so it looks like a low-hanging fog patch.
     const count = 14;
     for (var i = 0; i < count; i++) {
-      final r = _rng(i + 500, 6);
+      final r = _p(i + 500);
       final yBase = (0.05 + r[0] * 0.90) * size.height;
       final phase = r[1];
       final blobW = (0.45 + r[2] * 0.55) * size.width;
