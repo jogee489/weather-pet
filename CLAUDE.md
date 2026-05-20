@@ -9,7 +9,7 @@
 
 ## Git rules
 
-- Branching: `feature/`, `bug/`, `chore/` + short description (e.g. `bug/fix-cat-images`).
+- Branching: `feature/`, `fix/`, `chore/` + short description (e.g. `fix/cat-images`).
 - Never commit without asking first.
 - Never merge without explicit instruction.
 - Binary assets (PNGs): always commit via git to a branch, then PR → merge. Never push binaries via `mcp__github__push_files` — shell substitution is not expanded in MCP parameters.
@@ -31,7 +31,7 @@ Direct `git push origin main` is blocked. Two safe paths:
 
 **Text/code files** — use `mcp__github__push_files`.
 
-**Binary files (PNGs, etc.)** — commit to a feature/bug/chore branch, push via git, then PR → merge via MCP. Never use `mcp__github__push_files` for binaries; shell substitution (`$(cat ...)`) is not expanded in MCP parameters and the literal string gets stored instead.
+**Binary files (PNGs, etc.)** — commit to a feature/fix/chore branch, push via git, then PR → merge via MCP. Never use `mcp__github__push_files` for binaries; shell substitution (`$(cat ...)`) is not expanded in MCP parameters and the literal string gets stored instead.
 
 Verify PNG integrity before committing:
 ```python

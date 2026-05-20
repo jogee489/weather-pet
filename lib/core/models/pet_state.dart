@@ -38,13 +38,13 @@ enum PetState {
     if (!isDay) return PetState.night;
     if (apparentTempC >= kHotThresholdC) return PetState.hot;
     if (apparentTempC < kColdThresholdC) return PetState.cold;
-    if (windSpeedKmh > kWindyThresholdKmh) return PetState.windy;
+    if (windSpeedKmh >= kWindyThresholdKmh) return PetState.windy;
 
     return switch (wmoCode) {
       0 => PetState.sunny,
       1 || 2 || 3 => PetState.cloudy,
       45 || 48 => PetState.foggy,
-      >= 51 && <= 67 => PetState.rainy,
+      >= 51 && <= 67 => PetState.rainy, // includes freezing rain codes 66–67
       >= 71 && <= 77 => PetState.snowy,
       >= 80 && <= 82 => PetState.rainy,
       85 || 86 => PetState.snowy,

@@ -1,4 +1,5 @@
 /// Maximum number of hourly forecast entries kept after parsing.
+/// The API fetches 25 hours as a timezone buffer; this trims the result to 24 for the UI.
 const int kHourlyForecastLimit = 24;
 
 /// Parsed response from the Open-Meteo /v1/forecast endpoint.
@@ -40,10 +41,10 @@ class WeatherData {
     final humidity =
         (current['relative_humidity_2m'] as num?)?.toInt() ?? 0;
 
-    // Parse hourly (next 24 entries)
-    final hourlyTimes = hourlyJson['time'] as List<dynamic>;
-    final hourlyTemps = hourlyJson['temperature_2m'] as List<dynamic>;
-    final hourlyCodes = hourlyJson['weather_code'] as List<dynamic>;
+    // Parse hourly (next 24 entries) — guard against malformed API responses.
+    final hourlyTimes = (hourlyJson['time'] as List<dynamic>?) ?? [];
+    final hourlyTemps = (hourlyJson['temperature_2m'] as List<dynamic>?) ?? [];
+    final hourlyCodes = (hourlyJson['weather_code'] as List<dynamic>?) ?? [];
     final now = DateTime.now();
 
     final hourly = <HourlyForecast>[];
