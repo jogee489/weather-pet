@@ -102,22 +102,22 @@ class _WeatherPainter extends CustomPainter {
     final data = <int, List<double>>{};
     switch (state) {
       case PetState.rainy:
-        for (var i = 0; i < 80; i++) data[i] = _rng(i, 2);
+        for (var i = 0; i < 80; i++) { data[i] = _rng(i, 2); }
       case PetState.stormy:
-        for (var i = 0; i < 110; i++) data[i + 1000] = _rng(i + 1000, 2);
+        for (var i = 0; i < 110; i++) { data[i + 1000] = _rng(i + 1000, 2); }
       case PetState.snowy:
-        for (var i = 0; i < 70; i++) data[i + 100] = _rng(i + 100, 4);
+        for (var i = 0; i < 70; i++) { data[i + 100] = _rng(i + 100, 4); }
       case PetState.windy:
-        for (var i = 0; i < 6; i++) data[i + 200] = _rng(i + 200, 4);
-        for (var i = 0; i < 4; i++) data[i + 220] = _rng(i + 220, 5);
+        for (var i = 0; i < 6; i++) { data[i + 200] = _rng(i + 200, 4); }
+        for (var i = 0; i < 4; i++) { data[i + 220] = _rng(i + 220, 5); }
       case PetState.hot:
-        for (var i = 0; i < 14; i++) data[i + 50] = _rng(i + 50, 4);
+        for (var i = 0; i < 14; i++) { data[i + 50] = _rng(i + 50, 4); }
       case PetState.cold:
-        for (var i = 0; i < 18; i++) data[i + 300] = _rng(i + 300, 4);
+        for (var i = 0; i < 18; i++) { data[i + 300] = _rng(i + 300, 4); }
       case PetState.night:
-        for (var i = 0; i < 90; i++) data[i + 400] = _rng(i + 400, 6);
+        for (var i = 0; i < 90; i++) { data[i + 400] = _rng(i + 400, 6); }
       case PetState.foggy:
-        for (var i = 0; i < 14; i++) data[i + 500] = _rng(i + 500, 6);
+        for (var i = 0; i < 14; i++) { data[i + 500] = _rng(i + 500, 6); }
       default:
     }
     return data;
