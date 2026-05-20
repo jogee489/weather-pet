@@ -119,7 +119,6 @@ class _WeatherPainter extends CustomPainter {
       case PetState.foggy:
         for (var i = 0; i < 14; i++) data[i + 500] = _rng(i + 500, 6);
       default:
-        break;
     }
     return data;
   }
@@ -150,7 +149,6 @@ class _WeatherPainter extends CustomPainter {
       case PetState.foggy:
         _paintFoggy(canvas, size);
       case PetState.loading:
-        break;
     }
   }
 
