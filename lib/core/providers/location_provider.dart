@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/location_service.dart';
 
-typedef LatLon = ({double lat, double lon});
+// LatLon is defined in location_service.dart — re-export via import above.
 
 /// Resolves and caches the device's current position.
 /// Re-fetching is triggered by calling [LocationNotifier.refresh].

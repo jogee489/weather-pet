@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/constants/app_colors.dart';
 import 'features/forecast/forecast_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
@@ -22,7 +23,7 @@ class WeatherPetApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4A90D9),
+          seedColor: kBrandBlue,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
@@ -48,6 +49,8 @@ Page<void> _fadePage(BuildContext context, GoRouterState state, Widget child) =>
 
 final _router = GoRouter(
   initialLocation: '/splash',
+  errorBuilder: (context, state) =>
+      const Scaffold(body: Center(child: Text('Page not found'))),
   routes: [
     GoRoute(
       path: '/splash',

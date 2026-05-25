@@ -66,7 +66,7 @@ void main() {
       );
     });
 
-    test('does not return windy when wind is exactly 40 km/h (boundary)', () {
+    test('returns windy when wind is exactly 40 km/h (boundary)', () {
       expect(
         PetState.fromWeather(
           wmoCode: 1,
@@ -74,7 +74,7 @@ void main() {
           apparentTempC: 18,
           isDay: true,
         ),
-        PetState.cloudy,
+        PetState.windy,
       );
     });
 

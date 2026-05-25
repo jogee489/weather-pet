@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,6 +15,8 @@ class TemperatureUnitNotifier extends Notifier<TemperatureUnit> {
     final stored = prefs.getString(_kKey);
     if (stored == TemperatureUnit.fahrenheit.name) {
       state = TemperatureUnit.fahrenheit;
+    } else if (stored != null) {
+      debugPrint('Unknown temperature unit: $stored');
     }
   }
 

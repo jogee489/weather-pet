@@ -2,13 +2,8 @@ import 'pet_state.dart';
 
 /// Describes a pet character available in the app.
 ///
-/// Adding a new character requires:
-///   1. Creating `assets/rive/<id>/` and dropping in `default.riv`
-///      (plus any additional variant `.riv` files).
-///   2. Declaring a new [PetCharacter] in [PetCharacter.all].
-///
-/// No other code changes are needed — [PetAnimationWidget] resolves the
-/// correct asset path via [rivePath] automatically.
+/// Each character needs a set of PNG images at
+/// `assets/images/<id>/<state-name>.png` (one per [PetState]).
 class PetCharacter {
   const PetCharacter({
     required this.id,
@@ -18,34 +13,24 @@ class PetCharacter {
     this.availableVariants = const ['default'],
   });
 
-  /// Unique identifier; must match the folder name under `assets/rive/`.
+  /// Unique identifier; must match the folder name under `assets/images/`.
   final String id;
 
   /// Name shown in the character picker UI.
   final String displayName;
 
-  /// Default emoji — shown before Rive assets load and as the fallback
-  /// when no `.riv` file is present for this character.
+  /// Default emoji — shown when no PNG is found for a state.
   final String emoji;
 
   /// Per-state emoji overrides for expressive reactions.
   /// States absent from this map fall back to [emoji].
   final Map<PetState, String> expressiveEmojis;
 
-  /// Variants with Rive assets present. First entry is the default.
-  /// Each variant maps to one `.riv` file: `assets/rive/<id>/<variant>.riv`.
+  /// Variants available for this character. First entry is the default.
   final List<String> availableVariants;
 
   /// Returns the expressive emoji for [state], or [emoji] if no override exists.
   String emojiForState(PetState state) => expressiveEmojis[state] ?? emoji;
-
-  /// Returns the Rive asset path for this character and [variant].
-  ///
-  /// Each `.riv` file contains a single state machine (`WeatherMachine`)
-  /// driven by a numeric input (`weatherIndex`) that maps to [PetState.index].
-  /// Example: 'assets/rive/cat/default.riv'
-  String rivePath({String variant = 'default'}) =>
-      'assets/rive/$id/$variant.riv';
 
   /// Returns the [PetCharacter] for [id], or [defaultCharacter] if not found.
   static PetCharacter findById(String id) =>
@@ -68,8 +53,7 @@ class PetCharacter {
     },
   );
 
-  /// All available characters. To unlock a character, add it here
-  /// and supply its Rive assets under `assets/rive/<id>/`.
+  /// All available characters.
   static const List<PetCharacter> all = [
     defaultCharacter,
     PetCharacter(id: 'dog',    displayName: 'Dog',    emoji: '🐶'),

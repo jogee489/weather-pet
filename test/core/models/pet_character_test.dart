@@ -72,36 +72,5 @@ void main() {
         }
       });
     });
-
-    group('rivePath', () {
-      const cat = PetCharacter.defaultCharacter;
-
-      test('default variant produces correct path', () {
-        expect(cat.rivePath(), 'assets/rive/cat/default.riv');
-      });
-
-      test('non-default variant is reflected in path', () {
-        expect(cat.rivePath(variant: 'classic'), 'assets/rive/cat/classic.riv');
-      });
-
-      test('uses character id as folder', () {
-        expect(cat.rivePath(), contains('cat'));
-      });
-
-      test('path ends with .riv', () {
-        expect(cat.rivePath(), endsWith('.riv'));
-      });
-
-      test('dog produces correct path', () {
-        const dog = PetCharacter(id: 'dog', displayName: 'Dog', emoji: '🐶');
-        expect(dog.rivePath(), 'assets/rive/dog/default.riv');
-      });
-
-      test('all characters produce non-empty paths', () {
-        for (final character in PetCharacter.all) {
-          expect(character.rivePath(), isNotEmpty);
-        }
-      });
-    });
   });
 }

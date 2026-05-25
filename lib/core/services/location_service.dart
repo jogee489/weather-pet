@@ -4,12 +4,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _kLatKey = 'last_lat';
 const _kLonKey = 'last_lon';
 
+/// Minimum distance change (km) required to trigger a location state update.
+const double kLocationChangeThresholdKm = 1.0;
+
 typedef LatLon = ({double lat, double lon});
 
 /// GPS location detection and permission handling.
 /// Falls back to the last-saved location if GPS is unavailable.
 class LocationService {
   const LocationService();
+
+  // Last position returned to callers; used to suppress insignificant updates.
+  static LatLon? _lastPosition;
 
   /// Requests location permission and returns the current position.
   /// On web, geolocator uses the browser geolocation API.
@@ -39,6 +45,19 @@ class LocationService {
         timeLimit: const Duration(seconds: 30),
       );
       final result = (lat: position.latitude, lon: position.longitude);
+
+      // Only update state if position changed by more than the threshold.
+      final last = _lastPosition;
+      if (last != null) {
+        final distanceM = Geolocator.distanceBetween(
+          last.lat, last.lon, result.lat, result.lon,
+        );
+        if (distanceM < kLocationChangeThresholdKm * 1000) {
+          return last;
+        }
+      }
+
+      _lastPosition = result;
       await _cache(result);
       return result;
     } catch (_) {
