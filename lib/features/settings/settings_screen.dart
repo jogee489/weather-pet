@@ -78,7 +78,7 @@ class SettingsScreen extends ConsumerWidget {
                             : 'Simulate any weather state',
                         style: const TextStyle(color: Colors.white60),
                       ),
-                      activeColor: Colors.white,
+                      activeThumbColor: Colors.white,
                       activeTrackColor: Colors.white30,
                       inactiveThumbColor: Colors.white54,
                       inactiveTrackColor: Colors.white12,
@@ -158,6 +158,8 @@ class SettingsScreen extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _CharacterPickerSheet(ref: ref),
     );
   }
