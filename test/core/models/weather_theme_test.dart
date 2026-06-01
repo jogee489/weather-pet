@@ -19,7 +19,7 @@ void main() {
       final theme = WeatherTheme.forState(PetState.sunny);
       // Sunny should be warm (high red channel)
       final topColor = theme.gradientTop;
-      expect(topColor.red, greaterThan(200));
+      expect(topColor.r * 255, greaterThan(200));
     });
 
     test('night theme has dark gradient', () {
@@ -27,7 +27,7 @@ void main() {
       // Night should be dark (all channels low)
       final topColor = theme.gradientTop;
       final brightness =
-          (topColor.red + topColor.green + topColor.blue) / 3;
+          (topColor.r + topColor.g + topColor.b) / 3 * 255;
       expect(brightness, lessThan(60));
     });
 
@@ -35,7 +35,7 @@ void main() {
       final theme = WeatherTheme.forState(PetState.snowy);
       final topColor = theme.gradientTop;
       final brightness =
-          (topColor.red + topColor.green + topColor.blue) / 3;
+          (topColor.r + topColor.g + topColor.b) / 3 * 255;
       expect(brightness, greaterThan(180));
     });
 

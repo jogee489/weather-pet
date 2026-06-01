@@ -106,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                                 decoration: BoxDecoration(
                                   color: selected
                                       ? Colors.white
-                                      : Colors.white.withOpacity(0.15),
+                                      : Colors.white.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: selected
@@ -225,7 +225,7 @@ class _CharacterPickerSheet extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: selected
                         ? Colors.white
-                        : Colors.white.withOpacity(0.12),
+                        : Colors.white.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: selected ? Colors.white : Colors.white24,
@@ -274,7 +274,7 @@ class _SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
       ),
       child: child,

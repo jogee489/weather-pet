@@ -27,7 +27,7 @@ class HourlyStrip extends StatelessWidget {
         child: Center(
           child: Text(
             'No hourly data',
-            style: TextStyle(color: theme.textPrimary.withOpacity(0.5)),
+            style: TextStyle(color: theme.textPrimary.withValues(alpha: 0.5)),
           ),
         ),
       );
@@ -70,7 +70,7 @@ class HourlyTile extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
         color: isFirst
-            ? theme.textPrimary.withOpacity(0.25)
+            ? theme.textPrimary.withValues(alpha: 0.25)
             : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),

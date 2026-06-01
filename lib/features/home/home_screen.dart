@@ -7,6 +7,8 @@ import '../../core/models/pet_state.dart';
 import '../../core/models/weather_data.dart';
 import '../../core/models/weather_theme.dart';
 import '../../core/models/wmo_code.dart';
+import '../../core/services/location_service.dart';
+import '../../core/services/weather_api.dart';
 import '../../core/providers/pet_provider.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/selected_character_provider.dart';
@@ -17,9 +19,8 @@ import '../pet/pet_widget.dart';
 import '../shared/hourly_strip.dart';
 import 'weather_background.dart';
 
-/// Primary screen — cat mascot + current weather conditions.
-/// Cat animations (Lottie) and particle effects added in Phase 3.
-/// UI polish and hourly strip added in Phase 4.
+/// Primary screen — pet mascot, current conditions, particle effects,
+/// and the 24-hour hourly strip.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -49,7 +50,9 @@ class HomeScreen extends ConsumerWidget {
                   theme: theme,
                   character: character,
                   petState: petState,
+                  message: _errorMessage(e),
                   onRetry: () => ref.read(weatherProvider.notifier).refresh(),
+                  onPickCity: () => context.go('/search'),
                 ),
                 data: (weather) => _WeatherBody(
                   weather: weather,
@@ -92,7 +95,7 @@ class _LoadingBody extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Fetching weather…',
-            style: TextStyle(color: theme.textPrimary.withOpacity(0.7)),
+            style: TextStyle(color: theme.textPrimary.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -102,17 +105,32 @@ class _LoadingBody extends StatelessWidget {
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
+/// Human-readable reason for a weather/location failure.
+String _errorMessage(Object error) {
+  if (error is LocationServiceException) {
+    return 'Couldn\'t get your location. Search for a city instead.';
+  }
+  if (error is WeatherApiException) {
+    return 'Weather service is unavailable. Check your connection and retry.';
+  }
+  return 'Something went wrong. Check your connection and try again.';
+}
+
 class _ErrorBody extends StatelessWidget {
   const _ErrorBody({
     required this.theme,
     required this.character,
     required this.petState,
+    required this.message,
     required this.onRetry,
+    required this.onPickCity,
   });
   final WeatherTheme theme;
   final PetCharacter character;
   final PetState petState;
+  final String message;
   final VoidCallback onRetry;
+  final VoidCallback onPickCity;
 
   @override
   Widget build(BuildContext context) {
@@ -139,8 +157,8 @@ class _ErrorBody extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Check your connection and try again.',
-              style: TextStyle(color: theme.textPrimary.withOpacity(0.7)),
+              message,
+              style: TextStyle(color: theme.textPrimary.withValues(alpha: 0.7)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -148,6 +166,12 @@ class _ErrorBody extends StatelessWidget {
               onPressed: onRetry,
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: onPickCity,
+              icon: const Icon(Icons.search),
+              label: const Text('Pick a city'),
             ),
           ],
         ),
@@ -215,7 +239,7 @@ class _WeatherBody extends StatelessWidget {
                           child: Text(
                             'Next 24 hours',
                             style: TextStyle(
-                              color: theme.textPrimary.withOpacity(0.7),
+                              color: theme.textPrimary.withValues(alpha: 0.7),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.5,
@@ -261,7 +285,7 @@ class _TopBar extends StatelessWidget {
             Text(
               weather.isDay ? 'Good day!' : 'Good evening!',
               style: TextStyle(
-                color: theme.textPrimary.withOpacity(0.7),
+                color: theme.textPrimary.withValues(alpha: 0.7),
                 fontSize: 13,
               ),
             ),
@@ -308,7 +332,7 @@ class _TemperatureDisplay extends ConsumerWidget {
         Text(
           'Feels like ${unit.format(weather.apparentTemperatureC)}',
           style: TextStyle(
-            color: theme.textPrimary.withOpacity(0.7),
+            color: theme.textPrimary.withValues(alpha: 0.7),
             fontSize: 15,
           ),
         ),

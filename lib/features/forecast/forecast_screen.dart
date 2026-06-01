@@ -146,7 +146,7 @@ class _DailyCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isFirst
-            ? theme.textPrimary.withOpacity(0.2)
+            ? theme.textPrimary.withValues(alpha: 0.2)
             : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
@@ -173,7 +173,7 @@ class _DailyCard extends ConsumerWidget {
           Text(
             unit.format(forecast.minTempC),
             style: TextStyle(
-              color: theme.textPrimary.withOpacity(0.6),
+              color: theme.textPrimary.withValues(alpha: 0.6),
               fontSize: 15,
             ),
           ),
@@ -228,7 +228,7 @@ class _TempBar extends StatelessWidget {
       width: 60,
       height: 6,
       decoration: BoxDecoration(
-        color: theme.textPrimary.withOpacity(0.2),
+        color: theme.textPrimary.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(3),
       ),
       child: FractionallySizedBox(
@@ -236,7 +236,7 @@ class _TempBar extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Container(
           decoration: BoxDecoration(
-            color: theme.accentColor.withOpacity(0.85),
+            color: theme.accentColor.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(3),
           ),
         ),

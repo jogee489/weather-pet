@@ -169,7 +169,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Text(
                           'Your weather, with personality',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.65),
+                            color: Colors.white.withValues(alpha: 0.65),
                             fontSize: 15,
                             letterSpacing: 0.2,
                           ),
@@ -189,7 +189,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           strokeWidth: 2,
                         ),
                       ),
@@ -197,7 +197,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       Text(
                         'Getting your weather…',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.55),
+                          color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 14,
                         ),
                       ),
@@ -233,7 +233,7 @@ class _PulsingCat extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withOpacity(0.15 + 0.1 * t),
+                color: Colors.white.withValues(alpha: 0.15 + 0.1 * t),
                 blurRadius: glowRadius,
                 spreadRadius: glowRadius / 2,
               ),

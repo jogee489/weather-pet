@@ -22,24 +22,26 @@ class LocationService {
   /// Falls back to last-cached position if permission is denied or GPS fails.
   /// Throws [LocationServiceException] if no location is available at all.
   Future<LatLon> getCurrentLocation() async {
-    // Check if location services are enabled
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return _loadCachedOrThrow('Location services are disabled.');
-    }
-
-    // Request permission
-    var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      return _loadCachedOrThrow('Location permission denied.');
-    }
-
+    // The permission checks below can throw on web (the browser Permissions
+    // API may reject the `geolocation` query), so the whole flow is guarded —
+    // any failure falls back to the last-cached location instead of bubbling
+    // up and blanking the weather screen.
     try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return _loadCachedOrThrow('Location services are disabled.');
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return _loadCachedOrThrow('Location permission denied.');
+      }
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.low, // city-level is enough for weather
         timeLimit: const Duration(seconds: 30),
@@ -61,7 +63,7 @@ class LocationService {
       await _cache(result);
       return result;
     } catch (_) {
-      return _loadCachedOrThrow('Could not determine current position.');
+      return _loadCachedOrThrow('Could not determine current location.');
     }
   }
 

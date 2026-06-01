@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:http/http.dart' as http;
 
 import '../models/weather_data.dart';
@@ -55,7 +55,7 @@ class WeatherApi {
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
-    final cityName = await _reversGeocode(lat: lat, lon: lon);
+    final cityName = await _reverseGeocode(lat: lat, lon: lon);
 
     return WeatherData.fromJson(json, cityName: cityName);
   }
@@ -102,7 +102,7 @@ class WeatherApi {
 
   /// Reverse geocode via Nominatim (OpenStreetMap). Works on web.
   /// Falls back to coordinate string if the lookup fails.
-  Future<String> _reversGeocode({
+  Future<String> _reverseGeocode({
     required double lat,
     required double lon,
   }) async {
@@ -111,9 +111,13 @@ class WeatherApi {
         'https://nominatim.openstreetmap.org/reverse'
         '?format=json&lat=$lat&lon=$lon&zoom=10&accept-language=en',
       );
-      final response = await http.get(uri, headers: {
-        'User-Agent': 'WeatherPetApp/1.0',
-      });
+      // `User-Agent` is a forbidden header in browsers — setting it makes the
+      // web request fail, so only send it on native platforms (where
+      // Nominatim's usage policy expects an identifying UA).
+      final response = await http.get(
+        uri,
+        headers: kIsWeb ? null : const {'User-Agent': 'WeatherPetApp/1.0'},
+      );
       if (response.statusCode != 200) {
         return _coordFallback(lat, lon);
       }

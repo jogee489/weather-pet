@@ -165,7 +165,7 @@ class _WeatherPainter extends CustomPainter {
     final rotation = t * math.pi * 2;
 
     final rayPaint = Paint()
-      ..color = Colors.white.withOpacity(0.18)
+      ..color = Colors.white.withValues(alpha: 0.18)
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 
@@ -186,7 +186,7 @@ class _WeatherPainter extends CustomPainter {
       size.width * 0.35,
       Paint()
         ..shader = RadialGradient(
-          colors: [Colors.white.withOpacity(0.22), Colors.transparent],
+          colors: [Colors.white.withValues(alpha: 0.22), Colors.transparent],
         ).createShader(Rect.fromCircle(
           center: Offset(cx, cy),
           radius: size.width * 0.35,
@@ -199,7 +199,7 @@ class _WeatherPainter extends CustomPainter {
   void _paintCloudy(Canvas canvas, Size size) {
     // N=1 → each cloud drifts across the full screen in 8 s.
     // Phases spread the 5 clouds evenly so the screen is never empty. ✓
-    final cloudPaint = Paint()..color = Colors.white.withOpacity(0.12);
+    final cloudPaint = Paint()..color = Colors.white.withValues(alpha: 0.12);
     final clouds = [
       (phase: 0.00, dy: 0.10, radius: 0.18),
       (phase: 0.20, dy: 0.28, radius: 0.14),
@@ -226,7 +226,7 @@ class _WeatherPainter extends CustomPainter {
 
   void _paintRainy(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.lightBlueAccent.withOpacity(0.30)
+      ..color = Colors.lightBlueAccent.withValues(alpha: 0.30)
       ..strokeWidth = 1.3
       ..strokeCap = StrokeCap.round;
 
@@ -253,7 +253,7 @@ class _WeatherPainter extends CustomPainter {
 
   void _paintStormy(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blueGrey.withOpacity(0.45)
+      ..color = Colors.blueGrey.withValues(alpha: 0.45)
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
 
@@ -279,7 +279,7 @@ class _WeatherPainter extends CustomPainter {
     if (flash > 0) {
       canvas.drawRect(
         Rect.fromLTWH(0, 0, size.width, size.height),
-        Paint()..color = Colors.white.withOpacity(flash * 0.55),
+        Paint()..color = Colors.white.withValues(alpha: flash * 0.55),
       );
     }
   }
@@ -301,7 +301,7 @@ class _WeatherPainter extends CustomPainter {
   // ─── Snowy ───────────────────────────────────────────────────────────────
 
   void _paintSnowy(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.60);
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.60);
 
     const count = 70;
     for (var i = 0; i < count; i++) {
@@ -336,7 +336,7 @@ class _WeatherPainter extends CustomPainter {
       final rot = t * math.pi * 2 * 2 + r[3] * math.pi * 4;
 
       swirlPaint
-        ..color = Colors.white.withOpacity(0.20)
+        ..color = Colors.white.withValues(alpha: 0.20)
         ..strokeWidth = 1.8;
       _drawArc(canvas, Offset(xCenter, y), radius, rot, math.pi * 1.1, swirlPaint);
       _drawArc(canvas, Offset(xCenter, y), radius * 0.6, rot + math.pi,
@@ -389,12 +389,12 @@ class _WeatherPainter extends CustomPainter {
       ..quadraticBezierTo(leafSize * 0.7, -leafSize * 0.2, 0, leafSize)
       ..quadraticBezierTo(-leafSize * 0.7, -leafSize * 0.2, 0, -leafSize)
       ..close();
-    canvas.drawPath(path, Paint()..color = color.withOpacity(0.65));
+    canvas.drawPath(path, Paint()..color = color.withValues(alpha: 0.65));
     canvas.drawLine(
       Offset(0, -leafSize * 0.9),
       Offset(0, leafSize * 0.9),
       Paint()
-        ..color = color.withOpacity(0.90)
+        ..color = color.withValues(alpha: 0.90)
         ..strokeWidth = 1.0,
     );
     canvas.restore();
@@ -410,7 +410,7 @@ class _WeatherPainter extends CustomPainter {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            Colors.deepOrange.withOpacity(0.18),
+            Colors.deepOrange.withValues(alpha: 0.18),
             Colors.transparent,
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
@@ -428,7 +428,7 @@ class _WeatherPainter extends CustomPainter {
       final colHeight = size.height * 0.5;
 
       final paint = Paint()
-        ..color = Colors.deepOrange.withOpacity(0.32)
+        ..color = Colors.deepOrange.withValues(alpha: 0.32)
         ..strokeWidth = 1.6
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke;
@@ -467,9 +467,9 @@ class _WeatherPainter extends CustomPainter {
           radius: 1.0,
           colors: [
             Colors.transparent,
-            Colors.white.withOpacity(0.04),
-            Colors.white.withOpacity(0.20),
-            Colors.white.withOpacity(0.45),
+            Colors.white.withValues(alpha: 0.04),
+            Colors.white.withValues(alpha: 0.20),
+            Colors.white.withValues(alpha: 0.45),
           ],
           stops: const [0.0, 0.55, 0.85, 1.0],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
@@ -477,7 +477,7 @@ class _WeatherPainter extends CustomPainter {
 
     // Frost crystals in each corner — drawn on top of the vignette.
     final frostPaint = Paint()
-      ..color = Colors.white.withOpacity(0.28)
+      ..color = Colors.white.withValues(alpha: 0.28)
       ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
     final crystalLen = size.width * 0.16;
@@ -501,7 +501,7 @@ class _WeatherPainter extends CustomPainter {
         canvas.drawCircle(
           Offset(xBase + xDrift, y),
           1.6 + r[3] * 2.5,
-          Paint()..color = Colors.white.withOpacity(0.55),
+          Paint()..color = Colors.white.withValues(alpha: 0.55),
         );
       }
     }
@@ -566,14 +566,14 @@ class _WeatherPainter extends CustomPainter {
         canvas.drawCircle(
           Offset(x, y),
           baseRadius * 4.5,
-          Paint()..color = baseColor.withOpacity(0.12 * twinkle),
+          Paint()..color = baseColor.withValues(alpha: 0.12 * twinkle),
         );
       }
 
       canvas.drawCircle(
         Offset(x, y),
         baseRadius,
-        Paint()..color = baseColor.withOpacity(twinkle),
+        Paint()..color = baseColor.withValues(alpha: twinkle),
       );
     }
   }
@@ -612,7 +612,7 @@ class _WeatherPainter extends CustomPainter {
         Paint()
           ..shader = RadialGradient(
             colors: [
-              Colors.white.withOpacity(opacity),
+              Colors.white.withValues(alpha: opacity),
               Colors.transparent,
             ],
           ).createShader(

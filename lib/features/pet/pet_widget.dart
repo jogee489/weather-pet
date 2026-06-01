@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import '../../core/models/pet_character.dart';
 import '../../core/models/pet_state.dart';
 
-/// Animated emoji fallback for a pet character.
+/// Animated pet character.
 ///
-/// Used while Rive assets are loading or when no `.riv` file is present.
-/// Drives a simple transform animation (float, sway, shiver, etc.) using
-/// [_AnimConfig] — no external asset required.
+/// Renders the per-state PNG (falling back to an emoji if the asset is
+/// missing) and drives a simple transform animation (float, sway, shiver,
+/// etc.) using [_AnimConfig].
 class PetWidget extends StatelessWidget {
   const PetWidget({
     super.key,
@@ -118,6 +118,9 @@ class _AnimatedPetState extends State<_AnimatedPet>
 
 typedef _MatrixFn = Matrix4 Function(double t);
 
+/// Uniform scale matrix (replaces deprecated `Matrix4.scale(double)`).
+Matrix4 _uniformScale(double s) => Matrix4.identity()..scaleByDouble(s, s, s, 1);
+
 class _AnimConfig {
   const _AnimConfig({
     required this.duration,
@@ -132,11 +135,11 @@ class _AnimConfig {
   static _AnimConfig forState(PetState state) => switch (state) {
         PetState.loading => _AnimConfig(
             duration: const Duration(milliseconds: 900),
-            matrixForT: (t) => Matrix4.identity()..scale(0.90 + 0.10 * t),
+            matrixForT: (t) => _uniformScale(0.90 + 0.10 * t),
           ),
         PetState.hot => _AnimConfig(
             duration: const Duration(milliseconds: 1400),
-            matrixForT: (t) => Matrix4.identity()..scale(1.00 + 0.07 * t),
+            matrixForT: (t) => _uniformScale(1.00 + 0.07 * t),
           ),
         PetState.sunny => _AnimConfig(
             duration: const Duration(milliseconds: 2000),
@@ -148,7 +151,7 @@ class _AnimConfig {
           ),
         PetState.night => _AnimConfig(
             duration: const Duration(milliseconds: 4000),
-            matrixForT: (t) => Matrix4.identity()..scale(0.96 + 0.04 * t),
+            matrixForT: (t) => _uniformScale(0.96 + 0.04 * t),
           ),
         PetState.windy => _AnimConfig(
             duration: const Duration(milliseconds: 1400),

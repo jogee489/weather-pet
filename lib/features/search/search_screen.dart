@@ -122,13 +122,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search for a city…',
                     hintStyle:
-                        TextStyle(color: theme.textPrimary.withOpacity(0.5)),
+                        TextStyle(color: theme.textPrimary.withValues(alpha: 0.5)),
                     prefixIcon: Icon(Icons.search,
-                        color: theme.textPrimary.withOpacity(0.7)),
+                        color: theme.textPrimary.withValues(alpha: 0.7)),
                     suffixIcon: _controller.text.isNotEmpty
                         ? IconButton(
                             icon: Icon(Icons.clear,
-                                color: theme.textPrimary.withOpacity(0.7)),
+                                color: theme.textPrimary.withValues(alpha: 0.7)),
                             onPressed: () {
                               _controller.clear();
                               ref.read(_searchProvider.notifier).clear();
@@ -168,7 +168,7 @@ class _ResultsArea extends ConsumerWidget {
     if (state.isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          color: theme.textPrimary.withOpacity(0.6),
+          color: theme.textPrimary.withValues(alpha: 0.6),
           strokeWidth: 2,
         ),
       );
@@ -178,7 +178,7 @@ class _ResultsArea extends ConsumerWidget {
       return Center(
         child: Text(
           state.error!,
-          style: TextStyle(color: theme.textPrimary.withOpacity(0.8)),
+          style: TextStyle(color: theme.textPrimary.withValues(alpha: 0.8)),
           textAlign: TextAlign.center,
         ),
       );
@@ -188,7 +188,7 @@ class _ResultsArea extends ConsumerWidget {
       return Center(
         child: Text(
           'Type a city name to search',
-          style: TextStyle(color: theme.textPrimary.withOpacity(0.5)),
+          style: TextStyle(color: theme.textPrimary.withValues(alpha: 0.5)),
         ),
       );
     }
@@ -239,7 +239,7 @@ class _ResultTile extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.location_on_outlined,
-                  color: theme.textPrimary.withOpacity(0.7), size: 20),
+                  color: theme.textPrimary.withValues(alpha: 0.7), size: 20),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -251,7 +251,7 @@ class _ResultTile extends StatelessWidget {
                 ),
               ),
               Icon(Icons.chevron_right,
-                  color: theme.textPrimary.withOpacity(0.4), size: 20),
+                  color: theme.textPrimary.withValues(alpha: 0.4), size: 20),
             ],
           ),
         ),
