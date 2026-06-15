@@ -62,6 +62,10 @@ class LocationService {
       _lastPosition = result;
       await _cache(result);
       return result;
+    } on LocationServiceException {
+      // A no-cache fallback already produced a specific reason — preserve it
+      // rather than masking it with the generic message below.
+      rethrow;
     } catch (_) {
       return _loadCachedOrThrow('Could not determine current location.');
     }

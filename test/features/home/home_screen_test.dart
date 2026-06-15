@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:weather_pet/core/models/weather_data.dart';
 import 'package:weather_pet/core/providers/weather_provider.dart';
+import 'package:weather_pet/core/services/location_service.dart';
+import 'package:weather_pet/core/services/weather_api.dart';
 import 'package:weather_pet/features/home/home_screen.dart';
 
 /// A minimal valid [WeatherData] for use in widget tests.
@@ -73,6 +75,42 @@ void main() {
 
       expect(find.textContaining('Could not fetch weather'), findsOneWidget);
       expect(find.text('Try Again'), findsOneWidget);
+    });
+
+    testWidgets('shows location-specific message and "Pick a city" recovery '
+        'on LocationServiceException', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const HomeScreen(),
+          overrides: [
+            weatherProvider.overrideWith(() => _LocationErrorWeatherNotifier()),
+          ],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.textContaining('Search for a city'), findsOneWidget);
+      expect(find.text('Pick a city'), findsOneWidget);
+    });
+
+    testWidgets('shows weather-service message on WeatherApiException',
+        (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const HomeScreen(),
+          overrides: [
+            weatherProvider.overrideWith(() => _ApiErrorWeatherNotifier()),
+          ],
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.textContaining('Weather service is unavailable'),
+          findsOneWidget);
     });
 
     testWidgets('shows temperature when data loads', (tester) async {
@@ -231,6 +269,21 @@ class _LoadingWeatherNotifier extends WeatherNotifier {
 class _ErrorWeatherNotifier extends WeatherNotifier {
   @override
   Future<WeatherData> build() async => throw Exception('Network error');
+}
+
+/// Throws a [LocationServiceException] — exercises the location-failure
+/// message and the "Pick a city" recovery affordance.
+class _LocationErrorWeatherNotifier extends WeatherNotifier {
+  @override
+  Future<WeatherData> build() async =>
+      throw const LocationServiceException('Location permission denied.');
+}
+
+/// Throws a [WeatherApiException] — exercises the weather-service message.
+class _ApiErrorWeatherNotifier extends WeatherNotifier {
+  @override
+  Future<WeatherData> build() async =>
+      throw const WeatherApiException('Forecast request failed: 500');
 }
 
 /// Immediately returns data, producing AsyncData state.
