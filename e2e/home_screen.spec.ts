@@ -67,4 +67,18 @@ test.describe('Home Screen', () => {
   test('wind speed is visible', async ({ page }) => {
     await expect(page.getByText(/km\/h/).first()).toBeAttached({ timeout: 10_000 });
   });
+
+  test('loads the pet animation file', async ({ page }) => {
+    // beforeEach already loaded the app once; reload to observe the request.
+    const [response] = await Promise.all([
+      page.waitForResponse(r => /assets\/lottie\/cat\/cat\.json$/.test(r.url()), {
+        timeout: 15_000,
+      }),
+      page.reload(),
+    ]);
+    expect(response.status()).toBe(200);
+    const animation = await response.json();
+    const markers: string[] = animation.markers.map((m: { cm: string }) => m.cm);
+    expect(markers).toContain('cloudy.loop');
+  });
 });

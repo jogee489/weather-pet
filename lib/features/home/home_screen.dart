@@ -190,15 +190,22 @@ class _WeatherBody extends StatelessWidget {
                   const SizedBox(height: 16),
                   _TopBar(weather: weather, theme: theme),
                   const Spacer(),
-                  // Animated pet — crossfades when PetState or variant changes
+                  // Animated pet — crossfades when the character changes; a
+                  // PetState change is acted out by the pet itself.
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: PetAnimationWidget(
-                      key: ValueKey('$petId-$petState-$variant'),
+                      key: ValueKey('$petId-$variant'),
                       petId: petId,
                       weatherState: petState,
                       variant: variant,
                       size: 220,
+                      intensity: PetState.intensityFor(
+                        petState,
+                        wmoCode: weather.wmoCode,
+                        windSpeedKmh: weather.windSpeedKmh,
+                        apparentTempC: weather.apparentTemperatureC,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),

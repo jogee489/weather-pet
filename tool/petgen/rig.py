@@ -139,3 +139,77 @@ def to_svg(n):
     op = f' opacity="{n["opacity"]}"' if n['opacity'] != 1 else ''
     return (f'<g data-part="{n["name"]}" transform="{tf}"{op}>'
             + ''.join(to_svg(c) for c in n['children']) + '</g>')
+
+
+# ─── Gradient baking ──────────────────────────────────────────────────────────
+# Flutter's HTML web renderer paints Lottie gradient fills black, so gradients
+# never reach the exported file. bake() swaps each one for flat tones: a radial
+# gradient becomes shrinking copies of the shape stepped from rim colour to
+# centre colour; a linear gradient becomes its midpoint colour.
+
+def _hex(rgb):
+    return '#' + ''.join(f'{round(v):02X}' for v in rgb)
+
+
+def _sample(f, t):
+    stops = [(o, [int(c[i:i + 2], 16) for i in (1, 3, 5)]) for o, c in f['stops']]
+    t = max(stops[0][0], min(stops[-1][0], t))
+    for (o0, c0), (o1, c1) in zip(stops, stops[1:]):
+        if o0 <= t <= o1:
+            k = (t - o0) / (o1 - o0) if o1 > o0 else 0
+            return _hex([a + (b - a) * k for a, b in zip(c0, c1)])
+    return _hex(stops[-1][1])
+
+
+def _points(n):
+    if n['t'] == 'e':
+        return [(n['cx'] - n['rx'], n['cy'] - n['ry']), (n['cx'] + n['rx'], n['cy'] + n['ry']),
+                (n['cx'] - n['rx'], n['cy'] + n['ry']), (n['cx'] + n['rx'], n['cy'] - n['ry'])]
+    nums = [float(v) for v in _NUM.findall(n['d'])]
+    return list(zip(nums[::2], nums[1::2]))
+
+
+def _shrunk(n, c, k, name, fill):
+    m = dict(n, name=name, fill=fill, stroke=None, sw=0, behind=False)
+    if n['t'] == 'e':
+        m.update(cx=c[0] + (n['cx'] - c[0]) * k, cy=c[1] + (n['cy'] - c[1]) * k,
+                 rx=n['rx'] * k, ry=n['ry'] * k)
+    else:
+        out = []
+        for cmd, body in re.findall(r'([MCLZ])([^MCLZ]*)', n['d']):
+            nums = [float(v) for v in _NUM.findall(body)]
+            pts = [f'{c[i % 2] + (v - c[i % 2]) * k:.1f}' for i, v in enumerate(nums)]
+            out.append(cmd + ' ' + ' '.join(pts))
+        m['d'] = ' '.join(out)
+    return m
+
+
+def bake(n):
+    """Return the tree with every gradient fill replaced by flat tones."""
+    if n['t'] == 'g':
+        kids = []
+        for ch in n['children']:
+            b = bake(ch)
+            kids += b if isinstance(b, list) else [b]
+        return dict(n, children=kids)
+    f = n.get('fill')
+    if not isinstance(f, dict):
+        return n
+    if f['g'] == 'linear':
+        return dict(n, fill=_sample(f, .5))
+    pts = _points(n)
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    c, r = f['c'], f['r']
+    dist = lambda p: ((p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2) ** .5
+    inside = min(xs) < c[0] < max(xs) and min(ys) < c[1] < max(ys)
+    if not inside:  # the shape sits out on the gradient's rim: one flat tone
+        mid = ((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
+        return dict(n, fill=_sample(f, dist(mid) / r))
+    ext = max(dist(p) for p in pts) if n['t'] == 'e' and False else max(
+        max(xs) - c[0], c[0] - min(xs), max(ys) - c[1], c[1] - min(ys))
+    steps = 9 if ext > 110 else 6 if ext > 45 else 4
+    out = [dict(n, fill=_sample(f, ext / r))]
+    for i in range(1, steps):
+        k = 1 - .82 * i / (steps - 1)
+        out.append(_shrunk(n, c, k, f'{n["name"]}Tone{i}', _sample(f, k * ext / r)))
+    return out

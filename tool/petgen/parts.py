@@ -49,7 +49,7 @@ def eye(kind, side, c, lid):
 
 def brow(angle, side, c, y=-41):
     """Short brow above an eye; positive angle lifts the inner end."""
-    return G('brow', [P('b', 'M -13 0 L 13 0', stroke=c['outline'], sw=4.5)],
+    return G('browL' if side < 0 else 'browR', [P('b', 'M -13 0 L 13 0', stroke=c['outline'], sw=4.5)],
              ty=y, rot=angle * side)
 
 
@@ -120,3 +120,13 @@ def plume_tail(fur, tip, outline, stripe=None, rot=0):
           fill=fur, stroke=outline, sw=OLW, behind=True),
         *stripes, P('tailTip', tip_d, fill=tip),
     ], pivot=(190, 436), rot=rot)
+
+
+def zzz(x, y, color='#FFFFFF', edge='#3B4A8C'):
+    """Three sleeping Zs; hidden unless a state animates their opacity."""
+    def z(i, s):
+        d = f'M {-s} {-s} L {s} {-s} L {-s} {s} L {s} {s}'
+        return G(f'fxZ{i}', [P('edge', d, stroke=edge, sw=s * .5 + 5),
+                             P('z', d, stroke=color, sw=s * .5)],
+                 tx=x + i * 26, ty=y - i * 30)
+    return [z(0, 10), z(1, 14), z(2, 18)]

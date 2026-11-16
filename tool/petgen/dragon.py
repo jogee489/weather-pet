@@ -1,6 +1,6 @@
 """Dragon rig: green hatchling redrawn from 'Dragon weather set.png'."""
 from rig import G, P, E, mirror, radial, linear, ell_d
-from parts import OLW, union, eye, brow, mouth, blush
+from parts import OLW, union, eye, brow, mouth, blush, zzz
 
 NAME = 'Dragon'
 PERSONALITY = 'Small furnace. Adores heat and storms, sulks in the cold.'
@@ -38,7 +38,7 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
                       (1, c['horn_shade'])), **ol),
         P('ring1', 'M 180 92 C 188 90 196 86 202 80', stroke=c['horn_shade'], sw=3),
         P('ring2', 'M 186 118 C 196 116 206 110 214 102', stroke=c['horn_shade'], sw=3)])
-    frill_l = G('frillL', [
+    frill_l = G('earL', [
         P('frill', 'M 140 184 L 82 166 L 112 204 L 68 214 L 110 238 L 78 262 L 136 264 Z',
           fill=linear(70, 214, 140, 214, (0, c['skin_shade']), (1, c['skin'])), **ol),
         P('frillWeb', 'M 134 198 L 104 190 L 122 212 L 96 218 L 122 232 L 106 248 L 134 250 Z',
@@ -64,7 +64,7 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         eye_l, eye_r,
         E('nostrilL', 243, 266, 3.5, 5, fill=c['outline']),
         E('nostrilR', 269, 266, 3.5, 5, fill=c['outline']),
-        G('mouth', mouth(mouth_k, c, 'smile'), ty=8),
+        G('mouth', mouth(mouth_k, c, 'smile'), ty=8, pivot=(256, 283)),
     ], pivot=(256, 332), rot=head_rot)
     if head_only:
         return head
@@ -89,24 +89,23 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         E('foot', 176, 454, 36, 17, fill=linear(176, 438, 176, 472, (0, c['skin_light']),
                                                  (1, c['skin_shade'])), **ol),
         P('toe1', 'M 162 452 L 162 464', **toe), P('toe2', 'M 178 452 L 178 466', **toe)])
-    arm_l = G('armL', [E('arm', 0, 0, 14, 24, fill=linear(0, -24, 0, 24, (0, c['skin']),
+    arm_l = G('pawL', [E('arm', 0, 0, 14, 24, fill=linear(0, -24, 0, 24, (0, c['skin']),
                                                           (1, c['skin_shade'])), **ol)],
               tx=214, ty=404, rot=18)
     plates = [P(f'plate{i}', f'M {214 - i*2} {y} C 238 {y + 9} 274 {y + 9} {298 + i*2} {y}',
                 stroke=c['belly_shade'], sw=3) for i, y in enumerate((366, 390, 414, 438))]
-    return G('dragon', [
-        E('shadow', 256, 468, 140, 13, fill='#000000', opacity=.14),
+    return G('dragon', [E('shadow', 256, 468, 140, 13, fill='#000000', opacity=.14), G('root', [
         wing_l, mirror(wing_l), tail,
-        *union([('haunchL', ell_d(180, 422, 42, 42)), ('haunchR', ell_d(332, 422, 42, 42)),
+        G('torso', [*union([('haunchL', ell_d(180, 422, 42, 42)), ('haunchR', ell_d(332, 422, 42, 42)),
                 ('body', ell_d(256, 390, 90, 76))], BODY, c['outline']),
         P('belly', 'M 216 328 C 200 370 204 430 230 460 L 282 460 C 308 430 312 370 296 328 Z',
           fill=linear(256, 330, 256, 460, (0, c['belly_light']), (.4, c['belly']),
                       (1, c['belly_shade']))),
-        *plates,
+        *plates], pivot=(256, 462)),
         foot_l, mirror(foot_l), arm_l, mirror(arm_l),
         E('chinShade', 256, 342, 72, 13, fill=c['outline'], opacity=.22),
         head,
-    ])
+    ], pivot=(256, 466)), *zzz(366, 176)])
 
 
 EXPRESSIONS = [

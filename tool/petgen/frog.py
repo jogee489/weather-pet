@@ -1,6 +1,6 @@
 """Frog rig: round tree frog redrawn from 'Frog weather set.png'."""
 from rig import G, P, E, mirror, radial, linear, ell_d
-from parts import OLW, union, brow, blush
+from parts import OLW, union, brow, blush, zzz
 
 NAME = 'Frog'
 PERSONALITY = 'Rain is a party. Sun is a personal insult.'
@@ -107,7 +107,7 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         eye_l, eye_r,
         E('nostrilL', 245, 240, 3, 4, fill=c['outline']),
         E('nostrilR', 267, 240, 3, 4, fill=c['outline']),
-        G('mouth', _mouth(mouth_k)),
+        G('mouth', _mouth(mouth_k), pivot=(256, 290)),
     ], pivot=(256, 332), rot=head_rot)
     if head_only:
         return head
@@ -118,22 +118,22 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
     foot_l = G('hindFootL', [
         *union([('toeA', ell_d(112, 456, 13, 11)), ('toeB', ell_d(132, 462, 13, 11)),
                 ('foot', ell_d(158, 455, 40, 14))], skin_lin(150, 440, 472), c['outline'])])
-    arm_l = G('armL', [
+    arm_l = G('pawL', [
         E('arm', 224, 426, 15, 30, fill=skin_lin(224, 396, 456), **ol),
         *union([('fingerA', ell_d(208, 458, 9, 8)), ('fingerB', ell_d(240, 458, 9, 8)),
                 ('hand', ell_d(224, 456, 18, 10))], skin_lin(224, 446, 468), c['outline'])])
-    return G('frog', [
-        E('shadow', 256, 468, 150, 13, fill='#000000', opacity=.14),
-        *union([('thighL', ell_d(160, 420, 48, 40)), ('thighR', ell_d(352, 420, 48, 40)),
+    return G('frog', [E('shadow', 256, 468, 150, 13, fill='#000000', opacity=.14), G('root', [
+        G('torso', [*union([('thighL', ell_d(160, 420, 48, 40)), ('thighR', ell_d(352, 420, 48, 40)),
                 ('body', ell_d(256, 392, 98, 72))], BODY, c['outline']),
         E('belly', 256, 400, 62, 54, fill=radial(256, 380, 70, (0, c['belly_light']),
                                                  (.6, c['belly']), (1, c['belly_shade']))),
         E('thighLightL', 150, 404, 22, 12, fill=c['skin_light'], opacity=.5),
-        E('thighLightR', 362, 404, 22, 12, fill=c['skin_light'], opacity=.5),
+        E('thighLightR', 362, 404, 22, 12, fill=c['skin_light'], opacity=.5)],
+          pivot=(256, 462)),
         foot_l, mirror(foot_l), arm_l, mirror(arm_l),
         E('chinShade', 256, 342, 86, 12, fill=c['outline'], opacity=.2),
         head,
-    ])
+    ], pivot=(256, 466)), *zzz(376, 150)])
 
 
 EXPRESSIONS = [

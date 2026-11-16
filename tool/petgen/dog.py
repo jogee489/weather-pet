@@ -1,6 +1,6 @@
 """Dog rig: golden puppy redrawn from 'Dog weather set.png'."""
 from rig import G, P, E, mirror, radial, linear, ell_d
-from parts import OLW, union, eye, brow, mouth, blush, plume_tail
+from parts import OLW, union, eye, brow, mouth, blush, plume_tail, zzz
 
 NAME = 'Dog'
 PERSONALITY = 'Loves every kind of weather. Except thunder.'
@@ -23,8 +23,6 @@ HEAD_FUR = radial(256, 185, 195, (0, PAL['fur_light']), (.55, PAL['fur']),
                   (1, PAL['fur_shade']))
 BODY_FUR = radial(256, 350, 130, (0, PAL['fur_light']), (.6, PAL['fur']),
                   (1, PAL['fur_shade']))
-CREAM = radial(256, 284, 66, (0, PAL['cream_light']), (.6, PAL['cream']),
-               (1, PAL['cream_shade']))
 SKULL = ('M 256 112 C 326 112 388 152 392 222 C 394 266 376 304 344 320 '
          'C 316 334 284 338 256 338 C 228 338 196 334 168 320 '
          'C 136 304 118 266 120 222 C 124 152 186 112 256 112 Z')
@@ -60,9 +58,9 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         E('browLight', 256, 152, 76, 26, fill=c['fur_light'], opacity=.45),
         P('blaze', 'M 256 118 C 242 150 238 196 242 250 L 270 250 '
                    'C 274 196 270 150 256 118 Z', fill=c['cream'], opacity=.95),
-        E('muzzleL', 232, 292, 38, 30, fill=CREAM),
-        E('muzzleR', 280, 292, 38, 30, fill=CREAM),
-        E('chin', 256, 310, 34, 22, fill=CREAM),
+        E('muzzleL', 232, 292, 38, 30, fill=c['cream']),
+        E('muzzleR', 280, 292, 38, 30, fill=c['cream']),
+        E('chin', 256, 310, 34, 22, fill=c['cream']),
         E('muzzleLight', 256, 282, 36, 16, fill=c['cream_light'], opacity=.8),
         *dots, *bl, *[mirror(b) for b in bl],
         eye_l, eye_r,
@@ -82,7 +80,7 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
     foot_l = G('hindFootL', [
         E('foot', 172, 455, 36, 16, fill=cream_lin(172, 439, 471), **ol),
         P('toe1', 'M 158 453 L 158 464', **toe), P('toe2', 'M 174 453 L 174 466', **toe)])
-    leg_l = G('legL', [
+    leg_l = G('pawL', [
         E('leg', 228, 420, 21, 40, fill=linear(228, 380, 228, 460, (0, c['fur']),
                                                (1, c['fur_shade'])), **ol),
         E('paw', 228, 454, 25, 14, fill=cream_lin(228, 440, 468), **ol),
@@ -91,16 +89,15 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         linear(80, 380, 200, 440, (0, c['fur_light']), (.5, c['fur']), (1, c['fur_shade'])),
         linear(80, 350, 110, 400, (0, c['cream_light']), (1, c['cream'])),
         c['outline'], None, tail_rot))
-    return G('dog', [
-        E('shadow', 256, 468, 140, 13, fill='#000000', opacity=.14),
+    return G('dog', [E('shadow', 256, 468, 140, 13, fill='#000000', opacity=.14), G('root', [
         tail,
-        *union([('haunchL', ell_d(178, 418, 44, 46)), ('haunchR', ell_d(334, 418, 44, 46)),
+        G('torso', [*union([('haunchL', ell_d(178, 418, 44, 46)), ('haunchR', ell_d(334, 418, 44, 46)),
                 ('body', ell_d(256, 388, 92, 78))], BODY_FUR, c['outline']),
         P('bib', 'M 200 326 C 198 356 208 376 222 390 C 224 380 228 374 234 370 '
                  'C 236 388 244 402 256 412 C 268 402 276 388 278 370 '
                  'C 284 374 288 380 290 390 C 304 376 314 356 312 326 Z',
           fill=linear(256, 334, 256, 412, (0, c['cream']), (1, c['cream_shade'])),
-          stroke=c['cream_shade'], sw=3, behind=True),
+          stroke=c['cream_shade'], sw=3, behind=True)], pivot=(256, 462)),
         foot_l, mirror(foot_l), leg_l, mirror(leg_l),
         P('collar', 'M 190 326 C 220 348 292 348 322 326 L 320 344 '
                     'C 292 366 220 366 192 344 Z',
@@ -112,7 +109,7 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
             P('tagBar', 'M 249 376 L 263 376', stroke=c['tag'], sw=9)], pivot=(256, 364)),
         E('chinShade', 256, 342, 72, 13, fill=c['outline'], opacity=.2),
         head,
-    ])
+    ], pivot=(256, 466)), *zzz(366, 176)])
 
 
 EXPRESSIONS = [

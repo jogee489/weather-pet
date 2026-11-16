@@ -1,15 +1,23 @@
 """Render a pet model sheet SVG. Usage: sheet.py <animal> <out.svg>"""
-import base64
 import importlib
-import os
 import sys
 
-from rig import to_svg
+from rig import bake, to_svg
 
 animal, out = sys.argv[1], sys.argv[2]
 pet = importlib.import_module(animal)
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
-ref = os.path.join(ROOT, 'assets', 'images', animal, 'sunny.png')
+
+
+def still(tree):
+    """Baked rig without the effects that only appear mid-animation."""
+    tree = bake(tree)
+    drop = lambda n: dict(n, children=[drop(c) for c in n['children']
+                                       if not c['name'].startswith('fx')]) if n['t'] == 'g' else n
+    return drop(tree)
+
+
+SOURCES = {'cat': 'Weather cat  type collection.png', 'dog': 'Dog weather set.png',
+           'dragon': 'Dragon weather set.png', 'frog': 'Frog weather set.png'}
 INK, MUTE, BG, CARD = '#3A2A20', '#8A7868', '#F7F2E9', '#BFDDF2'
 FONT = 'font-family="Helvetica, Arial, sans-serif"'
 
@@ -30,18 +38,16 @@ for y, lab in pet.GUIDES:
     s.append(f'<line x1="0" x2="512" y1="{y}" y2="{y}" stroke="#FFFFFF" '
              'stroke-dasharray="6 6"/>')
     s.append(text(8, y - 6, lab, 13, MUTE))
-s.append(to_svg(pet.build()))
+s.append(to_svg(still(pet.build())))
 s.append('</g>')
 s.append(text(60, 672, 'Build', 20, weight=700))
 s.append(text(60, 698, '512 × 512 artboard, one group per moving part.', 15, MUTE))
-s.append(text(60, 720, 'Shading: 3-stop gradients. One shared 4 px outline per silhouette.',
+s.append(text(60, 720, 'Shading: stacked flat tones (no gradients). One shared 4 px outline per silhouette.',
               15, MUTE))
 
-b64 = base64.b64encode(open(ref, 'rb').read()).decode()
-s.append('<rect x="620" y="130" width="300" height="300" rx="16" fill="#6B7280"/>')
-s.append(f'<image x="630" y="150" width="280" height="249" '
-         f'href="data:image/png;base64,{b64}"/>')
-s.append(text(620, 456, 'Source art (being replaced)', 15, MUTE))
+s.append('<rect x="620" y="130" width="300" height="300" rx="16" fill="#E9E1D3"/>')
+s.append(text(770, 270, 'Redrawn from', 15, MUTE, anchor='middle'))
+s.append(text(770, 294, SOURCES[animal], 14, INK, 700, 'middle'))
 
 s.append(text(620, 510, 'Rig parts (each animates on its own)', 20, weight=700))
 for i, p in enumerate(pet.PARTS):
@@ -60,7 +66,7 @@ for i, (name, states, kw) in enumerate(pet.EXPRESSIONS):
     x = 60 + i * 250
     s.append(f'<rect x="{x}" y="790" width="230" height="250" rx="16" fill="{CARD}"/>')
     s.append(f'<g transform="translate({x - 13} 778) scale(0.5)">'
-             + to_svg(pet.build(head_only=True, **kw)) + '</g>')
+             + to_svg(still(pet.build(head_only=True, **kw))) + '</g>')
     s.append(text(x + 115, 992, name, 17, INK, 700, 'middle'))
     s.append(text(x + 115, 1014, states, 13, MUTE, 400, 'middle'))
 s.append('</svg>')

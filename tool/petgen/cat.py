@@ -5,7 +5,7 @@ from leaf-shaped fur clumps that share one outline with the part they sit on.
 Only fills, strokes, gradients and transforms are used (no blur, no mattes).
 """
 from rig import G, P, E, mirror, radial, linear
-from parts import OLW, union, eye, brow, mouth, plume_tail
+from parts import OLW, union, eye, brow, mouth, plume_tail, zzz
 
 NAME = 'Cat'
 PERSONALITY = 'Dignified sun-worshipper. Takes bad weather personally.'
@@ -28,8 +28,6 @@ HEAD_FUR = radial(256, 185, 195, (0, PAL['fur_light']), (.55, PAL['fur']),
                   (1, PAL['fur_shade']))
 BODY_FUR = radial(256, 350, 125, (0, PAL['fur_light']), (.6, PAL['fur']),
                   (1, PAL['fur_shade']))
-CREAM = radial(256, 282, 62, (0, PAL['cream_light']), (.6, PAL['cream']),
-               (1, PAL['cream_shade']))
 
 
 SKULL = ('M 256 108 C 330 108 398 150 402 222 C 404 262 388 300 350 318 '
@@ -89,21 +87,22 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         *union(TOP_FLUFF + CHEEK_FLUFF_L + cheek_r + [('skull', SKULL)], HEAD_FUR,
                c['outline']),
         E('browLight', 256, 152, 78, 26, fill=c['fur_light'], opacity=.45),
-        E('muzzleL', 236, 290, 34, 28, fill=CREAM),
-        E('muzzleR', 276, 290, 34, 28, fill=CREAM),
-        E('chin', 256, 306, 30, 22, fill=CREAM),
+        E('muzzleL', 236, 290, 34, 28, fill=c['cream']),
+        E('muzzleR', 276, 290, 34, 28, fill=c['cream']),
+        E('chin', 256, 306, 30, 22, fill=c['cream']),
         E('muzzleLight', 256, 280, 34, 18, fill=c['cream_light'], opacity=.8),
         P('stripeC', 'M 248 114 C 250 136 254 152 256 162 C 258 152 262 136 264 114 Z',
           fill=c['stripe']),
         *stripes_l, *[mirror(s) for s in stripes_l],
         *blush_l, *[mirror(b) for b in blush_l],
         eye_l, eye_r,
-        *whiskers_l, *[mirror(w) for w in whiskers_l],
+        G('whiskersL', whiskers_l, pivot=(205, 294)),
+        G('whiskersR', [mirror(w) for w in whiskers_l], pivot=(307, 294)),
         P('nose', 'M 247 263 C 251 259 261 259 265 263 C 263 269 259 272 256 272 '
                   'C 253 272 249 269 247 263 Z', fill=c['nose']),
         E('noseLight', 253, 263, 3, 1.6, fill=c['white'], opacity=.6),
         P('philtrum', 'M 256 272 L 256 280', stroke=c['outline'], sw=3.5),
-        G('mouth', mouth(mouth_k, c)),
+        G('mouth', mouth(mouth_k, c), pivot=(256, 283)),
     ], pivot=(256, 330), rot=head_rot)
     if head_only:
         return head
@@ -131,12 +130,13 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         P('bodyStripeL2', 'M 157 390 C 172 390 184 395 192 403 C 180 404 168 404 158 403 Z',
           fill=c['stripe']),
     ]
-    return G('cat', [
-        E('shadow', 256, 468, 140, 13, fill='#000000', opacity=.14),
+    return G('cat', [E('shadow', 256, 468, 140, 13, fill='#000000', opacity=.14), G('root', [
         tail,
-        E('body', 256, 385, 100, 78, fill=BODY_FUR, **ol),
-        *body_stripes_l, *[mirror(s) for s in body_stripes_l],
-        E('bellyShade', 256, 440, 70, 22, fill=c['fur_shade'], opacity=.45),
+        G('torso', [
+            E('body', 256, 385, 100, 78, fill=BODY_FUR, **ol),
+            *body_stripes_l, *[mirror(s) for s in body_stripes_l],
+            E('bellyShade', 256, 440, 70, 22, fill=c['fur_shade'], opacity=.45),
+        ], pivot=(256, 462)),
         foot_l, mirror(foot_l),
         P('chest', 'M 204 322 C 202 350 210 368 224 382 C 226 372 230 366 234 362 '
                    'C 236 380 244 394 256 404 C 268 394 276 380 278 362 '
@@ -148,7 +148,7 @@ def build(eyes='open', mouth_k='w', ear_rot=0, brow_a=None, tail_rot=0,
         E('chinShade', 256, 340, 74, 15, fill=c['outline'], opacity=.2),
         paw_l, mirror(paw_l),
         head,
-    ])
+    ], pivot=(256, 466)), *zzz(356, 176)])
 
 
 EXPRESSIONS = [
