@@ -30,6 +30,9 @@ dependencies:
   # Persistence
   shared_preferences: ^2.2.3
 
+  # Pet animation (3.1.x is the newest line that supports Flutter 3.22)
+  lottie: 3.1.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -43,7 +46,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/cat/
-    - assets/images/dog/
-    - assets/images/dragon/
-    - assets/images/frog/
+    - assets/lottie/cat/
+    - assets/lottie/dog/
+    - assets/lottie/dragon/
+    - assets/lottie/frog/

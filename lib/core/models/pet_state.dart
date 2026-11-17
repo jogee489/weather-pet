@@ -53,6 +53,41 @@ enum PetState {
     };
   }
 
+  /// How strong the weather behind [state] is, from 0 (barely) to 1 (extreme).
+  ///
+  /// Uses the raw readings rather than the collapsed state, so a gale flaps
+  /// the pet harder than a stiff breeze and a heatwave pants faster than a
+  /// warm day. States with no natural scale return 0.5.
+  /// Intensity used when a state is pinned in Preview Mode: the live readings
+  /// describe some other weather, so they say nothing about this one.
+  static const double previewIntensity = 0.5;
+
+  static double intensityFor(
+    PetState state, {
+    required int wmoCode,
+    required double windSpeedKmh,
+    required double apparentTempC,
+  }) {
+    final double raw = switch (state) {
+      PetState.windy => (windSpeedKmh - kWindyThresholdKmh) / 40,
+      PetState.hot => (apparentTempC - kHotThresholdC) / 10,
+      PetState.cold => (kColdThresholdC - apparentTempC) / 15,
+      PetState.rainy => switch (wmoCode) {
+          51 || 56 || 61 || 66 || 80 => 0.2,
+          55 || 57 || 65 || 67 || 82 => 1.0,
+          _ => 0.5,
+        },
+      PetState.snowy => switch (wmoCode) {
+          71 || 85 => 0.2,
+          75 || 86 => 1.0,
+          _ => 0.5,
+        },
+      PetState.stormy => wmoCode >= 96 ? 1.0 : 0.5,
+      _ => 0.5,
+    };
+    return raw.clamp(0.0, 1.0);
+  }
+
   // ─── Getters ───────────────────────────────────────────────────────────────
 
   /// Human-readable label used in the preview and settings screens.

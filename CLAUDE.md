@@ -48,9 +48,10 @@ assert data == bytes([137,80,78,71,13,10,26,10]), "not a valid PNG"
 
 ## Asset conventions
 
-- Pet images: `assets/images/<animal>/<state>.png` (one per `PetState` value)
-- Source sprite sheets: `assets/<Animal> weather set.png` — kept for reference, not bundled at runtime
-- Rive slots (future): `assets/rive/<animal>/<variant>.riv` — see `docs/pet_states.md`
+- Pet animations: `assets/lottie/<animal>/<animal>.json` — one Lottie file per pet, with `<state>.enter` / `.loop` / `.exit` markers for every `PetState`. See `docs/pet_states.md`.
+- The Lottie files are generated: edit `tool/petgen/` and run `python3 tool/petgen/build.py assets/lottie cat dog dragon frog`. Never hand-edit the JSON.
+- No gradients in pet art — Flutter's HTML web renderer paints them black.
+- Source sprite sheets: `assets/<Animal> weather set.png` — original painted art, kept for reference, not bundled at runtime
 
 ## Weather API
 

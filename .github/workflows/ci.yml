@@ -29,6 +29,9 @@ jobs:
       - name: Run tests
         run: flutter test --coverage
 
+      - name: Pet generator tests
+        run: python3 -m unittest discover tool/petgen/tests
+
   # ─── Web Build + GitHub Pages Deploy ──────────────────────────
   deploy:
     name: Deploy Web Preview
@@ -62,7 +65,9 @@ jobs:
   # ─── Playwright E2E ───────────────────────────────────────────────
   playwright:
     name: Playwright E2E
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright cannot install
+    # Chromium on yet. Unpin once the Playwright version in package.json can.
+    runs-on: ubuntu-24.04
     needs: test
     steps:
       - uses: actions/checkout@v4

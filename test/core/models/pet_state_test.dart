@@ -206,4 +206,37 @@ void main() {
       }
     });
   });
+
+  group('PetState.intensityFor', () {
+    double at(PetState s, {int wmo = 0, double wind = 10, double temp = 15}) =>
+        PetState.intensityFor(s,
+            wmoCode: wmo, windSpeedKmh: wind, apparentTempC: temp);
+
+    test('stronger wind gives a higher windy intensity', () {
+      expect(at(PetState.windy, wind: 40), 0.0);
+      expect(at(PetState.windy, wind: 60), closeTo(0.5, 1e-9));
+      expect(at(PetState.windy, wind: 120), 1.0);
+    });
+
+    test('hotter and colder both scale and clamp', () {
+      expect(at(PetState.hot, temp: 35), 0.0);
+      expect(at(PetState.hot, temp: 40), closeTo(0.5, 1e-9));
+      expect(at(PetState.hot, temp: 60), 1.0);
+      expect(at(PetState.cold, temp: -7.5), closeTo(0.5, 1e-9));
+      expect(at(PetState.cold, temp: -40), 1.0);
+    });
+
+    test('precipitation follows the WMO light / moderate / heavy tiers', () {
+      expect(at(PetState.rainy, wmo: 61), lessThan(at(PetState.rainy, wmo: 63)));
+      expect(at(PetState.rainy, wmo: 63), lessThan(at(PetState.rainy, wmo: 65)));
+      expect(at(PetState.snowy, wmo: 71), lessThan(at(PetState.snowy, wmo: 75)));
+      expect(at(PetState.stormy, wmo: 95), lessThan(at(PetState.stormy, wmo: 99)));
+    });
+
+    test('states without a scale sit in the middle', () {
+      for (final s in [PetState.sunny, PetState.night, PetState.loading]) {
+        expect(at(s), 0.5);
+      }
+    });
+  });
 }
