@@ -137,9 +137,13 @@ state's `enter`, then loops. Face swaps happen behind a blink.
 
 **Live touches added in Dart** (not baked into the file):
 
-- Random blinks every 2–6 s.
+- Random blinks every 2–6 s, on open eyes only (never brows or closed eyes).
 - `intensity` (0–1, from `PetState.intensityFor`) speeds the loop up
-  (0.8×–1.4×) and, when windy, widens ear and whisker flutter.
+  (0.8×–1.4×) and, when windy, widens ear and whisker flutter, which fades
+  in and out over 300 ms. A state pinned in Preview Mode uses a fixed 0.5,
+  because the live readings describe different weather.
+- A state change at any moment (mid-loop, mid-enter, mid-exit) is routed
+  through frames already on screen or the shared neutral pose, never a cut.
 - Tap makes the pet squash and bounce.
 - With the OS "reduce motion" setting on, the pet holds the first loop frame.
 

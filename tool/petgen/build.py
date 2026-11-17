@@ -12,7 +12,7 @@ for animal in sys.argv[2:] or ['cat']:
     pet = importlib.import_module(animal)
     states = importlib.import_module(animal + '_states').STATES
     tracks, markers, frames = anim.timeline(states)
-    rig = anim.full_rig(pet)
+    rig = anim.full_rig(pet, states)
     missing = sorted({ch.split('.')[0] for ch in tracks} - anim.names(rig))
     assert not missing, f'{animal}: states animate parts the rig lacks: {missing}'
     doc = lottie.export(rig, tracks, frames, markers)

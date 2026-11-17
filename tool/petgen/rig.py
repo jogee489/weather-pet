@@ -35,14 +35,32 @@ def linear(x1, y1, x2, y2, *stops):
     return dict(g='linear', p1=(x1, y1), p2=(x2, y2), stops=stops)
 
 
+def num(v, places=4):
+    """A number as plain decimals: never an exponent, never '-0'."""
+    s = f'{round(float(v), places):.{places}f}'.rstrip('0').rstrip('.')
+    return '0' if s in ('-0', '') else s
+
+
+def commands(d):
+    """Split a path string into [(command, [numbers])]; rejects anything else."""
+    bad = re.search(r'[^MCLZ\d\s.\-]', d)
+    if bad:
+        raise ValueError(f'unsupported character {bad.group()!r} in path: {d[:60]}')
+    return [(cmd, [float(n) for n in _NUM.findall(body)])
+            for cmd, body in re.findall(r'([MCLZ])([^MCLZ]*)', d)]
+
+
 def ell_d(cx, cy, rx, ry):
     """Ellipse as a four-cubic path string (so it can join a union outline)."""
     k = 0.5523
-    return (f'M {cx} {cy - ry} '
-            f'C {cx + rx*k:g} {cy - ry} {cx + rx} {cy - ry*k:g} {cx + rx} {cy} '
-            f'C {cx + rx} {cy + ry*k:g} {cx + rx*k:g} {cy + ry} {cx} {cy + ry} '
-            f'C {cx - rx*k:g} {cy + ry} {cx - rx} {cy + ry*k:g} {cx - rx} {cy} '
-            f'C {cx - rx} {cy - ry*k:g} {cx - rx*k:g} {cy - ry} {cx} {cy - ry} Z')
+    pts = [(cx, cy - ry),
+           (cx + rx * k, cy - ry), (cx + rx, cy - ry * k), (cx + rx, cy),
+           (cx + rx, cy + ry * k), (cx + rx * k, cy + ry), (cx, cy + ry),
+           (cx - rx * k, cy + ry), (cx - rx, cy + ry * k), (cx - rx, cy),
+           (cx - rx, cy - ry * k), (cx - rx * k, cy - ry), (cx, cy - ry)]
+    xy = [f'{num(x)} {num(y)}' for x, y in pts]
+    return f'M {xy[0]} ' + ' '.join(
+        'C ' + ' '.join(xy[i:i + 3]) for i in (1, 4, 7, 10)) + ' Z'
 
 
 def split(p0, p1, p2, p3, t):
@@ -60,11 +78,10 @@ _NUM = re.compile(r'-?\d+(?:\.\d+)?')
 def mirror_d(d, axis=W / 2):
     """Mirror a path string about the vertical line x = axis."""
     out = []
-    for cmd, body in re.findall(r'([MCLZ])([^MCLZ]*)', d):
-        nums = [float(n) for n in _NUM.findall(body)]
+    for cmd, nums in commands(d):
         for i in range(0, len(nums), 2):
             nums[i] = 2 * axis - nums[i]
-        out.append(cmd + ' ' + ' '.join(f'{n:g}' for n in nums))
+        out.append(' '.join([cmd] + [num(n) for n in nums]))
     return ' '.join(out)
 
 
@@ -165,7 +182,7 @@ def _points(n):
     if n['t'] == 'e':
         return [(n['cx'] - n['rx'], n['cy'] - n['ry']), (n['cx'] + n['rx'], n['cy'] + n['ry']),
                 (n['cx'] - n['rx'], n['cy'] + n['ry']), (n['cx'] + n['rx'], n['cy'] - n['ry'])]
-    nums = [float(v) for v in _NUM.findall(n['d'])]
+    nums = [v for _, vals in commands(n['d']) for v in vals]
     return list(zip(nums[::2], nums[1::2]))
 
 
@@ -176,10 +193,9 @@ def _shrunk(n, c, k, name, fill):
                  rx=n['rx'] * k, ry=n['ry'] * k)
     else:
         out = []
-        for cmd, body in re.findall(r'([MCLZ])([^MCLZ]*)', n['d']):
-            nums = [float(v) for v in _NUM.findall(body)]
-            pts = [f'{c[i % 2] + (v - c[i % 2]) * k:.1f}' for i, v in enumerate(nums)]
-            out.append(cmd + ' ' + ' '.join(pts))
+        for cmd, nums in commands(n['d']):
+            pts = [num(c[i % 2] + (v - c[i % 2]) * k, 1) for i, v in enumerate(nums)]
+            out.append(' '.join([cmd] + pts))
         m['d'] = ' '.join(out)
     return m
 
@@ -205,8 +221,7 @@ def bake(n):
     if not inside:  # the shape sits out on the gradient's rim: one flat tone
         mid = ((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
         return dict(n, fill=_sample(f, dist(mid) / r))
-    ext = max(dist(p) for p in pts) if n['t'] == 'e' and False else max(
-        max(xs) - c[0], c[0] - min(xs), max(ys) - c[1], c[1] - min(ys))
+    ext = max(max(xs) - c[0], c[0] - min(xs), max(ys) - c[1], c[1] - min(ys))
     steps = 9 if ext > 110 else 6 if ext > 45 else 4
     out = [dict(n, fill=_sample(f, ext / r))]
     for i in range(1, steps):

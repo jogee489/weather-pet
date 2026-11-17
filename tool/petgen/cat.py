@@ -1,8 +1,9 @@
 """Cat rig: layered vector parts redrawn from 'Weather cat  type collection.png'.
 
-Depth comes from gradients and stacked shade/highlight shapes; fluff comes
-from leaf-shaped fur clumps that share one outline with the part they sit on.
-Only fills, strokes, gradients and transforms are used (no blur, no mattes).
+Depth comes from stacked shade/highlight shapes; fluff comes from leaf-shaped
+fur clumps that share one outline with the part they sit on. Gradients here
+are authoring shorthand only: rig.bake() turns them into flat tones before
+export, because Flutter's HTML web renderer paints gradient fills black.
 """
 from rig import G, P, E, mirror, radial, linear
 from parts import OLW, union, eye, brow, mouth, plume_tail, zzz

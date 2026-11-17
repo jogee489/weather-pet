@@ -84,7 +84,7 @@ STATES = [
         pose={'root.scale': (1.07, .9), 'head.pos': (0, 9), **ears(20),
               'pawL.o': 0, 'pawR.o': 0, 'tail.rot': -10},
         loop={'root.pos': jitter((0, 0), (2.5, 0), 2, 0, 44) +
-                          jitter((0, 0), (2.5, 0), 2, 64, 108)[0:] + [(120, (0, 0), 'lin')],
+                          jitter((0, 0), (2.5, 0), 2, 64, 108) + [(120, (0, 0), 'lin')],
               'head.rot': wave(0, 1.5, 60, 120)})),
     ('night', dict(  # curled asleep, slow breathing, one ear twitch
         face=dict(eyes='sleep', mouth='w'), length=120,

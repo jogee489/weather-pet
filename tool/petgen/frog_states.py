@@ -9,13 +9,16 @@ def arms_up(start, end):
                          (end - 5, (14, -34), 'lin'), (end, (0, 0), 'in')]}
 
 
-def croak(at):
-    """Throat pulse with an 'o' mouth for a few frames."""
-    return {'mouth_w.o': [(0, 1, 'hold'), (at, 0, 'hold'), (at + 14, 1, 'hold')],
-            'mouth_o.o': [(0, 0, 'hold'), (at, 1, 'hold'), (at + 14, 0, 'hold')],
-            'torso.scale': [(at, (1, 1), 'lin'), (at + 3, (1.07, 1.04), 'out'),
-                            (at + 6, (1, 1), 'in'), (at + 9, (1.07, 1.04), 'out'),
-                            (at + 14, (1, 1), 'in')]}
+def croak(*starts):
+    """Throat pulses, each with an 'o' mouth for a few frames."""
+    out = {'mouth_w.o': [(0, 1, 'hold')], 'mouth_o.o': [(0, 0, 'hold')], 'torso.scale': []}
+    for at in starts:
+        out['mouth_w.o'] += [(at, 0, 'hold'), (at + 14, 1, 'hold')]
+        out['mouth_o.o'] += [(at, 1, 'hold'), (at + 14, 0, 'hold')]
+        out['torso.scale'] += [(at, (1, 1), 'lin'), (at + 3, (1.07, 1.04), 'out'),
+                               (at + 6, (1, 1), 'in'), (at + 9, (1.07, 1.04), 'out'),
+                               (at + 14, (1, 1), 'in')]
+    return out
 
 
 BREATHE = lambda length, period=30: {'torso.scale': wave((1, 1), (.02, .03), period, length)}
@@ -78,9 +81,9 @@ STATES = [
     ('foggy', dict(  # damp and happy: croaking
         face=dict(eyes='happy', mouth='w'), length=120,
         pose={},
-        loop=chain(120, croak(30), croak(84), {'head.rot': wave(0, 3, 120, 120)}))),
+        loop=chain(120, croak(30, 84), {'head.rot': wave(0, 3, 120, 120)}))),
     ('loading', dict(  # bouncing on the spot
         face=dict(eyes='big', mouth='open'), length=40,
         pose={},
-        loop=chain(40, hop(0, 34, 16, .14), hop(20, 20, 12, .1)))),
+        loop=chain(40, hop(0, 34, 14, .14), hop(22, 20, 10, .1)))),
 ]

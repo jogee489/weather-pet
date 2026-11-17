@@ -58,6 +58,10 @@ enum PetState {
   /// Uses the raw readings rather than the collapsed state, so a gale flaps
   /// the pet harder than a stiff breeze and a heatwave pants faster than a
   /// warm day. States with no natural scale return 0.5.
+  /// Intensity used when a state is pinned in Preview Mode: the live readings
+  /// describe some other weather, so they say nothing about this one.
+  static const double previewIntensity = 0.5;
+
   static double intensityFor(
     PetState state, {
     required int wmoCode,

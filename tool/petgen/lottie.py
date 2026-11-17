@@ -2,10 +2,10 @@
 
 The whole pet is one shape layer; every rig group becomes a nested Lottie
 shape group whose transform carries the animation. Only features every
-Lottie player renders are emitted: paths, ellipses, solid and gradient
-fills, strokes, group transforms and markers.
+Lottie player renders are emitted: paths, ellipses, solid fills,
+strokes, group transforms and markers.
 """
-import re
+from rig import commands
 
 FPS = 30
 EASE = {  # name -> (out handle of previous key, in handle of this key)
@@ -15,7 +15,6 @@ EASE = {  # name -> (out handle of previous key, in handle of this key)
     'in': ((.5, 0), (.9, .9)),
     'back': ((.34, 1.56), (.64, 1)),
 }
-_TOK = re.compile(r'([MCLZ])|(-?\d+(?:\.\d+)?)')
 
 
 def _rgb(h):
@@ -44,14 +43,9 @@ def _bezier(d):
                 verts.append(p); ins.append([c2[0] - p[0], c2[1] - p[1]])
                 outs.append([0, 0])
 
-    for c, n in _TOK.findall(d):
-        if c:
-            flush()
-            cmd, nums = c, []
-            closed = closed or c == 'Z'
-        else:
-            nums.append(float(n))
-    flush()
+    for cmd, nums in commands(d):
+        closed = closed or cmd == 'Z'
+        flush()
     if closed and len(verts) > 1 and all(abs(a - b) < .01 for a, b in zip(verts[0], verts[-1])):
         ins[0] = ins[-1]
         verts.pop(); ins.pop(); outs.pop()
@@ -72,7 +66,12 @@ def _stroke(n):
 
 def _prop(keys, conv, dims, spatial=False):
     """keys: [(frame, value, ease)] where ease describes the move INTO that key."""
-    keys = sorted({t: (t, v, e) for t, v, e in keys}.values())
+    by_frame = {}
+    for t, v, e in keys:
+        if t in by_frame and conv(by_frame[t][1]) != conv(v):
+            raise ValueError(f'two different keys on frame {t}: {by_frame[t][1]} and {v}')
+        by_frame[t] = (t, v, e)
+    keys = [by_frame[t] for t in sorted(by_frame)]
     vals = [conv(v) for _, v, _ in keys]
     # Drop keys that sit between two identical neighbours: nothing moves there.
     keep = [i for i in range(len(keys))
@@ -88,7 +87,8 @@ def _prop(keys, conv, dims, spatial=False):
             if ease == 'hold':
                 kf['h'] = 1
             else:
-                (ox, oy), (ix, iy) = EASE[ease]
+                (ox, oy), (ix, iy) = EASE[ease] if isinstance(ease, str) else ease
+                ox, oy, ix, iy = (round(h, 3) for h in (ox, oy, ix, iy))
                 if spatial:
                     kf['o'], kf['i'] = {'x': ox, 'y': oy}, {'x': ix, 'y': iy}
                 else:

@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:weather_pet/core/models/pet_state.dart';
 import 'package:weather_pet/core/models/weather_data.dart';
+import 'package:weather_pet/core/providers/weather_override_provider.dart';
 import 'package:weather_pet/core/providers/weather_provider.dart';
 import 'package:weather_pet/features/home/home_screen.dart';
+import 'package:weather_pet/features/pet/pet_animation_widget.dart';
 
 /// A minimal valid [WeatherData] for use in widget tests.
 WeatherData _fakeWeather({
@@ -214,6 +217,29 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Next 24 hours'), findsNothing);
+    });
+
+    testWidgets('a previewed state ignores the live readings for intensity',
+        (tester) async {
+      // Calm day (10 km/h) with "windy" pinned in Preview Mode: the live wind
+      // would give intensity 0 and a pet that barely moves.
+      await tester.pumpWidget(
+        _wrap(
+          const HomeScreen(),
+          overrides: [
+            weatherProvider
+                .overrideWith(() => _DataWeatherNotifier(_fakeWeather())),
+            weatherOverrideProvider.overrideWith((ref) => PetState.windy),
+          ],
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final pet = tester
+          .widget<PetAnimationWidget>(find.byType(PetAnimationWidget));
+      expect(pet.weatherState, PetState.windy);
+      expect(pet.intensity, PetState.previewIntensity);
     });
   });
 }

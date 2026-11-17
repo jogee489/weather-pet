@@ -38,6 +38,46 @@ class PetWidget extends StatefulWidget {
   State<PetWidget> createState() => _PetWidgetState();
 }
 
+enum _Phase { idle, enter, loop, exit }
+
+/// Fades the wind flutter in and out so it never switches on mid-frame.
+@visibleForTesting
+class GustEnvelope {
+  static const double rampMs = 300;
+
+  double _from = 0;
+  double _target = 0;
+  double _sinceMs = -rampMs;
+
+  /// Heads for [target] (0 or 1), starting from the level at [nowMs].
+  void aim(double target, double nowMs) {
+    if (target == _target) return;
+    _from = level(nowMs);
+    _target = target;
+    _sinceMs = nowMs;
+  }
+
+  double level(double nowMs) {
+    final t = ((nowMs - _sinceMs) / rampMs).clamp(0.0, 1.0);
+    return _from + (_target - _from) * t * t * (3 - 2 * t);
+  }
+}
+
+/// Degrees of flutter to add to a part's rotation. [intensity] is clamped to
+/// 0–1; [level] is the [GustEnvelope] fade.
+@visibleForTesting
+double gustOffset({
+  required double degrees,
+  required double intensity,
+  required double level,
+  required double seconds,
+  required double phase,
+}) =>
+    degrees *
+    intensity.clamp(0.0, 1.0) *
+    level *
+    math.sin(seconds * 2 * math.pi * 5 + phase);
+
 class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
   late final AnimationController _frames = AnimationController(vsync: this);
   late final AnimationController _tap = AnimationController(
@@ -51,11 +91,12 @@ class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
   bool _failed = false;
   bool _reduceMotion = false;
 
-  /// State whose segments are on screen, and a token that cancels a running
-  /// sequence when a newer one starts.
+  /// State whose segments are on screen, which of its segments is playing,
+  /// and a token that cancels a running sequence when a newer one starts.
   PetState? _shown;
-  bool _inLoop = false;
+  _Phase _phase = _Phase.idle;
   int _sequence = 0;
+  final _gustEnvelope = GustEnvelope();
 
   Timer? _blinkTimer;
   double _blinkStartMs = -1e9;
@@ -82,6 +123,7 @@ class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
     if (old.character.id != widget.character.id) {
       _composition = null;
       _shown = null;
+      _phase = _Phase.idle;
       _sequence++;
       _frames.stop();
       _load();
@@ -122,18 +164,17 @@ class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
 
   double get _loopSpeed => 0.8 + 0.6 * widget.intensity.clamp(0.0, 1.0);
 
-  /// Plays [marker] from its start (or from the current frame when
-  /// [fromCurrent]) to its end. Returns false if a newer sequence took over.
-  Future<bool> _play(Marker marker, int token,
-      {double speed = 1, bool fromCurrent = false}) async {
+  /// Animates from the current frame (or from [from]) to [to], forwards or
+  /// backwards. Returns false if a newer sequence took over.
+  Future<bool> _run(double to, int token,
+      {double speed = 1, double? from}) async {
     final composition = _composition!;
-    if (!fromCurrent) _frames.value = marker.start;
-    final frames =
-        (marker.end - _frames.value) * composition.durationFrames;
+    if (from != null) _frames.value = from;
+    final frames = (to - _frames.value).abs() * composition.durationFrames;
     final ms = frames / composition.frameRate * 1000 / speed;
     try {
       await _frames
-          .animateTo(marker.end,
+          .animateTo(to,
               duration: Duration(milliseconds: math.max(1, ms.round())))
           .orCancel;
     } on TickerCanceled {
@@ -142,6 +183,11 @@ class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
     return mounted && token == _sequence;
   }
 
+  /// Brings the pet to [PetWidget.petState] from wherever it is right now.
+  ///
+  /// Every route goes through frames that are already on screen or through
+  /// the neutral pose shared by all enters and exits, so an interruption at
+  /// any point — mid-loop, mid-enter, mid-exit — never cuts.
   Future<void> _restart() async {
     if (_composition == null) return;
     final token = ++_sequence;
@@ -154,32 +200,61 @@ class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
       _frames.stop();
       _frames.value = loop.start;
       _shown = target;
-      _inLoop = false;
+      _phase = _Phase.loop;
       return;
     }
     _scheduleBlink();
 
-    final previous = _shown;
-    if (previous != null && previous != target) {
-      final oldLoop = _marker(previous, 'loop');
-      final exit = _marker(previous, 'exit');
-      // Hurry the current loop to its end pose so the exit starts cleanly.
-      if (_inLoop && oldLoop != null) {
-        if (!await _play(oldLoop, token, speed: 4, fromCurrent: true)) return;
+    final shown = _shown;
+    var atNeutral = shown == null || _phase == _Phase.idle;
+    if (shown != null && !atNeutral) {
+      final staying = shown == target;
+      switch (_phase) {
+        case _Phase.loop when staying:
+          // Already looping the right state: carry on from this frame.
+          if (!await _run(loop.end, token, speed: _loopSpeed)) return;
+        case _Phase.loop:
+          // Hurry the old loop to its end pose so the exit starts cleanly.
+          final oldLoop = _marker(shown, 'loop');
+          final exit = _marker(shown, 'exit');
+          if (oldLoop != null && !await _run(oldLoop.end, token, speed: 4)) {
+            return;
+          }
+          _phase = _Phase.exit;
+          if (exit != null &&
+              !await _run(exit.end, token, from: exit.start)) {
+            return;
+          }
+          atNeutral = true;
+        case _Phase.enter when staying:
+          final enter = _marker(shown, 'enter');
+          if (enter != null && !await _run(enter.end, token)) return;
+        case _Phase.enter:
+          // Back out of the half-played enter to neutral.
+          final enter = _marker(shown, 'enter');
+          if (enter != null && !await _run(enter.start, token)) return;
+          atNeutral = true;
+        case _Phase.exit:
+          // Let the exit finish; neutral is the quickest way anywhere.
+          final exit = _marker(shown, 'exit');
+          if (exit != null && !await _run(exit.end, token)) return;
+          atNeutral = true;
+        case _Phase.idle:
+          atNeutral = true;
       }
-      _inLoop = false;
-      if (exit != null && !await _play(exit, token)) return;
     }
 
-    if (previous != target || !_inLoop) {
+    if (atNeutral) {
       _shown = target;
-      _inLoop = false;
+      _phase = _Phase.enter;
       final enter = _marker(target, 'enter');
-      if (enter != null && !await _play(enter, token)) return;
+      if (enter != null && !await _run(enter.end, token, from: enter.start)) {
+        return;
+      }
     }
 
-    _inLoop = true;
-    while (await _play(loop, token, speed: _loopSpeed)) {}
+    _phase = _Phase.loop;
+    while (await _run(loop.end, token, speed: _loopSpeed, from: loop.start)) {}
   }
 
   // ─── Live touches layered on the baked animation ───────────────────────────
@@ -214,16 +289,23 @@ class _PetWidgetState extends State<PetWidget> with TickerProviderStateMixin {
   double _gust(double? from, double? to, double t, double degrees,
       double phase) {
     final baked = lerpDouble(from, to, t) ?? 0;
-    if (_shown != PetState.windy || !_inLoop) return baked;
-    final seconds = _clock.elapsedMilliseconds / 1000.0;
+    final now = _clock.elapsedMilliseconds.toDouble();
+    final windy = _shown == PetState.windy && _phase == _Phase.loop;
+    _gustEnvelope.aim(windy ? 1 : 0, now);
     return baked +
-        degrees *
-            widget.intensity *
-            math.sin(seconds * 2 * math.pi * 5 + phase);
+        gustOffset(
+          degrees: degrees,
+          intensity: widget.intensity,
+          level: _gustEnvelope.level(now),
+          seconds: now / 1000.0,
+          phase: phase,
+        );
   }
 
+  // The live blink targets eye<S>Blink, which holds only the open-eye
+  // variants: brows and line-art (closed) eyes sit outside it.
   late final LottieDelegates _delegates = LottieDelegates(values: [
-    for (final eye in const ['eyeL', 'eyeR'])
+    for (final eye in const ['eyeLBlink', 'eyeRBlink'])
       ValueDelegate.transformScale(
         ['**', eye],
         callback: (i) => _blinkScale(

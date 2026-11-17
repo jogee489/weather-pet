@@ -11,6 +11,7 @@ import '../../core/providers/pet_provider.dart';
 import '../../core/providers/pet_state_provider.dart';
 import '../../core/providers/selected_character_provider.dart';
 import '../../core/providers/temperature_unit_provider.dart';
+import '../../core/providers/weather_override_provider.dart';
 import '../../core/providers/weather_provider.dart';
 import '../pet/pet_animation_widget.dart';
 import '../pet/pet_widget.dart';
@@ -30,6 +31,7 @@ class HomeScreen extends ConsumerWidget {
     final variant = ref.watch(selectedVariantProvider);
     final theme = WeatherTheme.forState(petState);
     final weatherAsync = ref.watch(weatherProvider);
+    final previewing = ref.watch(weatherOverrideProvider) != null;
 
     return AnimatedContainer(
       duration: kWeatherTransitionDuration,
@@ -54,6 +56,7 @@ class HomeScreen extends ConsumerWidget {
                 data: (weather) => _WeatherBody(
                   weather: weather,
                   petState: petState,
+                  previewing: previewing,
                   petId: character.id,
                   variant: variant,
                   theme: theme,
@@ -162,6 +165,7 @@ class _WeatherBody extends StatelessWidget {
   const _WeatherBody({
     required this.weather,
     required this.petState,
+    required this.previewing,
     required this.petId,
     required this.variant,
     required this.theme,
@@ -170,6 +174,10 @@ class _WeatherBody extends StatelessWidget {
 
   final WeatherData weather;
   final PetState petState;
+
+  /// True when [petState] is pinned in Preview Mode rather than derived
+  /// from [weather].
+  final bool previewing;
   final String petId;
   final String variant;
   final WeatherTheme theme;
@@ -200,12 +208,14 @@ class _WeatherBody extends StatelessWidget {
                       weatherState: petState,
                       variant: variant,
                       size: 220,
-                      intensity: PetState.intensityFor(
-                        petState,
-                        wmoCode: weather.wmoCode,
-                        windSpeedKmh: weather.windSpeedKmh,
-                        apparentTempC: weather.apparentTemperatureC,
-                      ),
+                      intensity: previewing
+                          ? PetState.previewIntensity
+                          : PetState.intensityFor(
+                              petState,
+                              wmoCode: weather.wmoCode,
+                              windSpeedKmh: weather.windSpeedKmh,
+                              apparentTempC: weather.apparentTemperatureC,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 32),

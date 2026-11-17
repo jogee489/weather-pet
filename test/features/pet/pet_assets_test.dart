@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -38,6 +39,43 @@ void main() {
           final exit = composition.getMarker('${state.name}.exit')!;
           expect(enter.startFrame + enter.durationFrames, loop.startFrame);
           expect(loop.startFrame + loop.durationFrames, exit.startFrame);
+        }
+      });
+
+      // Group names under [node], by walking the raw shape tree.
+      Set<String> names(Map<String, dynamic> node) => {
+            if (node['nm'] != null) node['nm'] as String,
+            for (final child in (node['it'] as List? ?? const []))
+              if (child is Map<String, dynamic> && child['ty'] == 'gr')
+                ...names(child),
+          };
+
+      Map<String, dynamic>? group(Map<String, dynamic> node, String name) {
+        if (node['nm'] == name) return node;
+        for (final child in (node['it'] as List? ?? const [])) {
+          if (child is Map<String, dynamic> && child['ty'] == 'gr') {
+            final hit = group(child, name);
+            if (hit != null) return hit;
+          }
+        }
+        return null;
+      }
+
+      test('the live blink squashes open eyes only, never brows', () {
+        final doc = jsonDecode(File(character.lottieAsset).readAsStringSync())
+            as Map<String, dynamic>;
+        final root = (doc['layers'] as List).first['shapes'][0]
+            as Map<String, dynamic>;
+        for (final side in const ['L', 'R']) {
+          final live = group(root, 'eye${side}Blink');
+          expect(live, isNotNull, reason: 'eye${side}Blink is missing');
+          final inside = names(live!);
+          for (final shut in const ['sleep', 'happy', 'squint']) {
+            expect(inside, isNot(contains('eye${side}_$shut')));
+          }
+          expect(names(group(root, 'eye$side')!),
+              isNot(contains('brow$side')));
+          expect(group(root, 'brow$side'), isNotNull);
         }
       });
 

@@ -98,5 +98,5 @@ STATES = [
     ('loading', dict(  # can't wait
         face=dict(eyes='happy', mouth='open'), length=40,
         pose={},
-        loop=chain(40, WAG(18, 10, 40), hop(0, 30, 14), hop(20, 18, 12)))),
+        loop=chain(40, WAG(18, 10, 40), hop(0, 30, 14), hop(22, 18, 10)))),
 ]
